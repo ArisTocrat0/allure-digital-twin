@@ -29,42 +29,74 @@ function password(p) {
     fail("invalid_password");
   return p;
 }
+// Explicit bounds precede every native conversion. Totals remain safely within int32.
+function integer(value, min, max) {
+  if (!Number.isSafeInteger(value) || value < min || value > max)
+    fail("invalid_config");
+}
+function recordId(value) {
+  if (!Number.isSafeInteger(value) || value < 1) fail("invalid_input");
+  return value;
+}
 function configuration(input) {
   if (!input || typeof input !== "object") fail();
   const c = structuredClone(input);
   try {
     validate(c);
+    integer(c.seed, 0, 4294967295);
+    integer(c.horizon, 1, 28800);
+    integer(c.operators, 1, 3);
+    integer(c.shipEvery, 300, 604800);
+    if (
+      !Array.isArray(c.cycles) ||
+      c.cycles.length !== 3 ||
+      !Array.isArray(c.bufferCaps) ||
+      c.bufferCaps.length !== 2 ||
+      !Array.isArray(c.deliveries) ||
+      c.deliveries.length > 20 ||
+      !Array.isArray(c.failures) ||
+      c.failures.length > 20 ||
+      !Array.isArray(c.shifts) ||
+      c.shifts.length > 10 ||
+      !Array.isArray(c.orders) ||
+      c.orders.length < 1 ||
+      c.orders.length > 20 ||
+      Object.keys(c.stock).sort().join() !== "body,engine,wheels" ||
+      Object.keys(c.bom).sort().join() !== "body,engine,wheels"
+    )
+      fail("invalid_config");
+    c.cycles.forEach((n) => integer(n, 30, 3600));
+    c.bufferCaps.forEach((n) => integer(n, 1, 20));
+    Object.values(c.stock).forEach((n) => integer(n, 0, 10000));
+    Object.values(c.bom).forEach((n) => integer(n, 1, 100));
+    for (const d of c.deliveries) {
+      integer(d.at, 0, 604800);
+      if (!d.parts || typeof d.parts !== "object" || Array.isArray(d.parts))
+        fail("invalid_config");
+      for (const [key, n] of Object.entries(d.parts)) {
+        if (!Object.hasOwn(c.stock, key)) fail("invalid_config");
+        integer(n, 0, 10000);
+      }
+    }
+    for (const f of c.failures) {
+      integer(f.at, 0, 604800);
+      integer(f.station, 0, 2);
+      integer(f.duration, 1, 86400);
+    }
+    for (const shift of c.shifts) {
+      if (!Array.isArray(shift) || shift.length !== 2) fail("invalid_config");
+      integer(shift[0], 0, 604800);
+      integer(shift[1], 1, 604800);
+    }
+    for (const o of c.orders) {
+      if (typeof o.id !== "string" || o.id.length < 1 || o.id.length > 40)
+        fail("invalid_config");
+      integer(o.qty, 1, 1000);
+      integer(o.due, 0, 604800);
+    }
   } catch {
     fail("invalid_config");
   }
-  if (
-    c.seed > 4294967295 ||
-    c.horizon > 28800 ||
-    c.cycles.some((v) => v < 30 || v > 3600) ||
-    c.shipEvery < 300 ||
-    c.bufferCaps.some((v) => v > 20) ||
-    c.deliveries.length > 20 ||
-    c.failures.length > 20 ||
-    c.shifts.length > 10 ||
-    c.orders.length > 20 ||
-    Object.keys(c.stock).sort().join() !== "body,engine,wheels" ||
-    Object.keys(c.bom).sort().join() !== "body,engine,wheels" ||
-    Object.values(c.stock).some((v) => v > 10000) ||
-    Object.values(c.bom).some((v) => v > 100) ||
-    c.deliveries.some(
-      (d) => d.at > 604800 || Object.values(d.parts).some((v) => v > 10000),
-    ) ||
-    c.failures.some((f) => f.at > 604800 || f.duration > 86400) ||
-    c.orders.some(
-      (o) =>
-        typeof o.id !== "string" ||
-        o.id.length > 40 ||
-        o.qty > 1000 ||
-        o.due > 604800,
-    ) ||
-    c.shifts.some(([a, b]) => b > 604800)
-  )
-    fail("invalid_config");
   return c;
 }
 function scenarioInput(v) {
@@ -82,6 +114,7 @@ module.exports = {
   account,
   password,
   configuration,
+  recordId,
   scenarioInput,
   languages,
   fail,

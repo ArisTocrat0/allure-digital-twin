@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-04T10:12:13.164Z",
+  "date": "2026-10-04T10:36:11.217Z",
   "node": "v24.19.0",
   "platform": "win32",
   "arch": "x64",
@@ -7,37 +7,37 @@
   "repeat": 500,
   "samples": [
     {
-      "jsMs": 168.3738,
-      "nativeMs": 141.9067,
-      "nativeWallMs": 155.9008
+      "jsMs": 195.19800000000004,
+      "nativeMs": 157.8731,
+      "nativeWallMs": 169.08799999999997
     },
     {
-      "jsMs": 167.6409,
-      "nativeMs": 137.0636,
-      "nativeWallMs": 144.1064
+      "jsMs": 205.76729999999998,
+      "nativeMs": 173.4649,
+      "nativeWallMs": 182.3538000000001
     },
     {
-      "jsMs": 174.7532,
-      "nativeMs": 144.7325,
-      "nativeWallMs": 152.05140000000006
+      "jsMs": 203.46200000000022,
+      "nativeMs": 162.3834,
+      "nativeWallMs": 169.5489
     },
     {
-      "jsMs": 197.80309999999986,
-      "nativeMs": 155.2307,
-      "nativeWallMs": 162.00970000000007
+      "jsMs": 186.48299999999995,
+      "nativeMs": 159.2283,
+      "nativeWallMs": 165.51639999999998
     },
     {
-      "jsMs": 191.18720000000008,
-      "nativeMs": 152.7742,
-      "nativeWallMs": 159.11799999999994
+      "jsMs": 189.85860000000002,
+      "nativeMs": 159.4225,
+      "nativeWallMs": 167.62139999999977
     }
   ],
   "median": {
-    "jsMs": 174.7532,
-    "nativeMs": 144.7325,
-    "nativeWallMs": 155.9008
+    "jsMs": 195.19800000000004,
+    "nativeMs": 159.4225,
+    "nativeWallMs": 169.08799999999997
   },
-  "computeSpeedup": 1.207421968113589,
-  "wallSpeedup": 1.1209256142367454,
-  "scope": "500 independent eight-hour baseline runs; snapshots/logs built each run; native process startup included only in wall time; JS warmed up; no network/UI/SQLite"
+  "computeSpeedup": 1.2244068434505795,
+  "wallSpeedup": 1.1544166351249059,
+  "scope": "500 independent eight-hour baseline runs per batch; full snapshots/logs constructed every run, only the final native snapshot is serialized and returned; one native process per batch; native startup/final output included only in wall time; JS warmed up; no HTTP/DB/UI measurement"
 }

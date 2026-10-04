@@ -92,6 +92,66 @@ async function go(page, section) {
     await page.waitForFunction(
       () => !document.querySelector('[data-calc="save"]').disabled,
     );
+    // Regression: API accepts zero or multiple deliveries; UI must preserve every entry.
+    for (const count of [0, 2]) {
+      const cfg = structuredClone(
+        require("../src/domain/reference.cjs").DEFAULT,
+      );
+      cfg.deliveries = count
+        ? [
+            { at: 7200, parts: { body: 2, engine: 3, wheels: 8 } },
+            { at: 15000, parts: { body: 4, engine: 5, wheels: 16 } },
+          ]
+        : [];
+      const created = await page.evaluate(
+        async (data) => {
+          const session = await (await fetch("/api/me")).json();
+          const r = await fetch("/api/scenarios", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": session.csrf,
+            },
+            body: JSON.stringify(data),
+          });
+          return r.json();
+        },
+        { name: "Deliveries " + count, config: cfg },
+      );
+      await page.reload();
+      await page.locator("nav").waitFor();
+      await go(page, "overview");
+      await go(page, "scenarios");
+      await page.locator(`[data-scenario="${created.id}"]`).click();
+      await page.waitForFunction(
+        (name) => document.querySelector("#scenario-name")?.value === name,
+        "Deliveries " + count,
+      );
+      assert.equal(
+        await page.locator('#scenario-form input[name^="delivery_"]').count(),
+        count,
+      );
+      if (count) await page.locator('[name="delivery_0"]').fill("9000");
+      await page.locator("#save-scenario").click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#notice")?.textContent ===
+            I18N[document.documentElement.lang].saved &&
+          !document.querySelector("#save-scenario")?.disabled,
+      );
+      const stored = await page.evaluate(
+        async (id) =>
+          (await (await fetch("/api/scenarios")).json()).scenarios.find(
+            (s) => s.id === id,
+          ),
+        created.id,
+      );
+      const expected = structuredClone(cfg.deliveries);
+      if (count) expected[0].at = 9000;
+      assert.deepEqual(stored.config.deliveries, expected);
+      await go(page, "overview");
+      await go(page, "scenarios");
+    }
     for (const locale of ["ru", "kk", "en"]) {
       await page.locator("#language").selectOption(locale);
       await page.waitForFunction(
@@ -148,7 +208,7 @@ async function go(page, section) {
     );
     assert.equal(await page.locator("#language").inputValue(), "en");
     await go(page, "scenarios");
-    assert.ok((await page.locator("[data-scenario]").count()) === 1);
+    assert.ok((await page.locator("[data-scenario]").count()) === 3);
     await page.setViewportSize({ width: 390, height: 844 });
     for (const section of [
       "overview",
@@ -183,7 +243,7 @@ async function go(page, section) {
     assert.equal(await page.locator("#language").inputValue(), "en");
     assert.deepEqual(errors, []);
     console.log(
-      "PASS UI: registration/login/logout, five scenarios, repeated run/reset, saved scenario/run, profile/reload, 3 locales x 5 pages, mobile widths, keyboard, zero JS errors",
+      "PASS UI: registration/login/logout, five scenarios, repeated run/reset, saved scenario/run, zero/multiple deliveries, profile/reload, 3 locales x 5 pages, mobile widths, keyboard, zero JS errors",
     );
   } finally {
     if (browser) await browser.close();

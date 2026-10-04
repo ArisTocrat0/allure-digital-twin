@@ -273,6 +273,113 @@ test("server authentication, authorization, persistence and validation", async (
         assert.equal((await req("/health")).status, 200);
       },
     );
+    await t.test(
+      "API rejects narrowing overflow before calling native",
+      async () => {
+        const r = await req(
+          "/simulate",
+          "POST",
+          { config: { ...structuredClone(c), shipEvery: 4294967596 } },
+          a,
+        );
+        assert.equal(r.status, 400);
+        assert.equal(r.body.error, "invalid_config");
+        assert.equal(
+          (await req("/simulate", "POST", { scenarioId: 9007199254740992 }, a))
+            .status,
+          400,
+        );
+      },
+    );
+    await t.test(
+      "HTTP body keeps UTF-8 characters split between TCP writes",
+      async () => {
+        const http = require("node:http"),
+          payload = Buffer.from(
+            JSON.stringify({ name: "Жанар", language: "kk" }),
+          );
+        const split = payload.indexOf(Buffer.from("Ж")) + 1;
+        const response = await new Promise((resolve, reject) => {
+          const request = http.request(
+            origin + "/api/me",
+            {
+              method: "PUT",
+              agent: false,
+              headers: {
+                Origin: origin,
+                Cookie: a.cookie,
+                "X-CSRF-Token": a.csrf,
+                "Content-Type": "application/json",
+                "Content-Length": payload.length,
+              },
+            },
+            (res) => {
+              const chunks = [];
+              res.on("data", (b) => chunks.push(b));
+              res.on("end", () =>
+                resolve({
+                  status: res.statusCode,
+                  body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+                }),
+              );
+            },
+          );
+          request.on("error", reject);
+          request.setTimeout(5000, () => request.destroy(Error("timeout")));
+          request.on("socket", (socket) => socket.setNoDelay(true));
+          request.flushHeaders();
+          request.write(payload.subarray(0, split));
+          setTimeout(() => request.end(payload.subarray(split)), 40);
+        });
+        assert.equal(response.status, 200);
+        assert.equal(response.body.user.name, "Жанар");
+        assert.equal(
+          (await req("/me", "GET", null, a)).body.user.name,
+          "Жанар",
+        );
+        const malformed = Buffer.concat([
+          Buffer.from('{"name":"'),
+          Buffer.from([0xd0]),
+          Buffer.from('name","language":"kk"}'),
+        ]);
+        const bad = await fetch(origin + "/api/me", {
+          method: "PUT",
+          headers: {
+            Origin: origin,
+            Cookie: a.cookie,
+            "X-CSRF-Token": a.csrf,
+            "Content-Type": "application/json",
+          },
+          body: malformed,
+        });
+        assert.equal(bad.status, 400);
+      },
+    );
+    await t.test(
+      "large native Russian journals match reference over six worker runs",
+      async () => {
+        const config = {
+          ...structuredClone(c),
+          cycles: [30, 30, 30],
+          operators: 3,
+          stock: { body: 1000, engine: 1000, wheels: 4000 },
+          deliveries: [],
+          failures: [],
+          shifts: [[0, 28800]],
+          orders: [{ id: "Большой заказ", qty: 1000, due: 28800 }],
+          qualityFail: 0,
+        };
+        const expected = require("../src/domain/reference.cjs").run(config);
+        for (let i = 0; i < 6; i++) {
+          const r = await req("/simulate", "POST", { config }, a);
+          assert.equal(r.status, 200);
+          assert.deepEqual(r.body.result.snapshot, expected);
+          assert.ok(
+            !JSON.stringify(r.body.result.snapshot.log).includes("\uFFFD"),
+          );
+        }
+      },
+    );
     await t.test("profile persists through server restart", async () => {
       assert.equal(
         (await req("/me", "PUT", { name: "Updated user", language: "kk" }, a))

@@ -1,6 +1,9 @@
 "use strict";
 window.I18N = {
   ru: {
+    deliveryTime: "Время поставки (секунды)",
+    noDeliveries:
+      "Поставки не запланированы. Используется только начальный запас.",
     app: "Цифровой двойник",
     demo: "Демонстрационные данные. Модель не калибрована на ALLUR и не является реальной телеметрией.",
     overview: "Обзор",
@@ -169,6 +172,8 @@ window.I18N = {
     changed: "Изменения сохранены",
   },
   en: {
+    deliveryTime: "Delivery time (seconds)",
+    noDeliveries: "No deliveries scheduled. Only initial stock is available.",
     app: "Digital twin",
     demo: "Demonstration data. Not calibrated to ALLUR and not live factory telemetry.",
     overview: "Overview",
@@ -338,6 +343,8 @@ window.I18N = {
     changed: "Changes saved",
   },
   kk: {
+    deliveryTime: "Жеткізілім уақыты (секунд)",
+    noDeliveries: "Жеткізілім жоспарланбаған. Тек бастапқы қор қолданылады.",
     app: "Цифрлық егіз",
     demo: "Көрсетілім деректері. Модель ALLUR деректерімен калибрленбеген және зауыттың нақты телеметриясы емес.",
     overview: "Шолу",

@@ -1,8 +1,8 @@
 # Validation checkpoint — 2026-10-04
 
 - F010, Windows x64, Node v24.19.0; C++17 compiled with Zig 0.15.2, `-O3 -DNDEBUG`.
-- `node --test tests/*.test.js`: 35 tests including nested API tests; all passed. The model batch covers 40 seeds × 5 scenarios. Native equivalence covers 200 scenario snapshots plus 80 chunked boundary configurations, including full logs.
-- `node tests/app-ui.cjs`: passed with installed Playwright + separate headless Microsoft Edge. Registration, login, logout, repeat calculation/reset, five templates, saved scenario/run, profile/reload, RU/KK/EN across five pages, 390px, keyboard and zero JS errors.
+- `node --test tests/*.test.js`: 41 tests including nested API tests; all passed. The model batch covers 40 seeds × 5 scenarios. Native equivalence covers 200 scenario snapshots plus 80 chunked boundary configurations, including full logs.
+- `node tests/app-ui.cjs`: passed with installed Playwright + separate headless Microsoft Edge. Registration, login, logout, repeat calculation/reset, five templates, saved scenario/run, profile/reload, RU/KK/EN across five pages, 390px, keyboard and zero JS errors. Zero- and two-delivery scenarios load and save without fabricating or losing deliveries.
 - API tests also verify six concurrent native worker requests without scenario mixing, CSRF, second-account isolation, SQLite persistence across restart, password change and session revocation.
 - Browser screenshots inspected: `artifacts/app-en-desktop.png`, `artifacts/app-en-mobile.png`; RU/KK screenshots also generated. They are local QA artifacts, excluded from Git.
 - Live endpoint: `http://127.0.0.1:3000/api/health` returns `status=ok`, `engine=cpp17`, `database=sqlite`, `synthetic=true`.
@@ -12,9 +12,20 @@
 
 Final `docs/benchmark.json`: 5 samples × 500 complete baseline runs after 500 JS warmup runs. No UI test or compilation ran concurrently with the final sample.
 
-Median JS: **174.7532 ms**; native model/snapshot construction: **144.7325 ms**; native including one batch-process startup and output: **155.9008 ms**.
+Median JS: **195.1980 ms**; native model/snapshot construction: **159.4225 ms**; native including one batch-process startup and final output: **169.0880 ms**.
 
-Compute ratio **1.2074×**, batch wall ratio **1.1209×**. This modest local benchmark is not a claim that the whole application is 20.7% faster or that any real factory process improves. The server uses two persistent native workers to avoid launching a process per interactive request. End-to-end browser latency was not benchmarked against the old application.
+Compute ratio **1.2244×**, batch wall ratio **1.1544×**. Each batch runs 500 independent models and constructs full snapshots/logs each time, but **only its final native snapshot is serialized and returned**. These are not HTTP, database or UI timings. The server uses two persistent native workers. End-to-end browser latency was not benchmarked against the old application.
+
+## P2 audit fixes and regressions
+
+1. `shipEvery=4294967596` now returns API 400 and a native validation error. All consumed integer fields are bounded before narrowing, including CLI until/repeat/targets; there are explicit tests across 30 field paths plus request parameters.
+2. Native stdout uses `setEncoding("utf8")`. A deterministic mock splits every byte of Cyrillic/Kazakh/emoji JSON; six real large-output runs also match the complete JS snapshot and Russian log.
+3. HTTP JSON buffers are assembled before strict UTF-8 decoding, with a byte limit. The real TCP test splits Ж between its first and second bytes with a 40ms delay; Жанар is preserved. Malformed UTF-8 returns 400.
+4. UI loads and saves both zero and multiple deliveries. Tests verify empty arrays remain empty and each delivery's parts are preserved when one timestamp changes.
+
+Release C++ was rebuilt with the documented O3 command. An additional `build/twin-ubsan.exe` was compiled with Zig C++17, `-O1 -g -fsanitize=undefined -fsanitize-trap=undefined`. All 5 native/boundary test groups passed against that executable, including the 280 complete-state equivalence cases. **ASan and a prolonged load test were not performed.**
+
+The local server was restarted after the fixes, PID 4832, and health returned 200 with cpp17/sqlite. No user rows or database files were reset or replaced; tests used isolated artifact databases.
 
 ## Explicit limits
 

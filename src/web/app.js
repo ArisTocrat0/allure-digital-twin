@@ -152,18 +152,24 @@ function scenarios() {
   return `<h1>${t("scenarios")}</h1><p class="muted">${t("configHelp")}</p><section class="panel"><label class="field">${t("template")}<select id="template">${templates.map((x) => `<option value="${x.key}" ${x.key === templateKey ? "selected" : ""}>${t(x.key)}</option>`).join("")}</select></label></section><div class="grid"><section class="panel"><h2>${scenarioId ? esc(scenarioName) : t("newScenario")}</h2><form id="scenario-form"><div class="form-grid"><label class="field full">${t("scenarioName")}<input id="scenario-name" name="name" value="${esc(scenarioName || t(templateKey))}" minlength="2" maxlength="80" required></label>${[
     ["seed", config.seed, 0, 4294967295],
     ["operators", config.operators, 1, 3],
-    ["delivery", config.deliveries[0].at, 0, 604800],
+    ...config.deliveries.map((d, i) => [
+      "delivery_" + i,
+      d.at,
+      0,
+      604800,
+      t("deliveryTime") + " #" + (i + 1),
+    ]),
     ["cycle0", config.cycles[0], 30, 3600],
     ["cycle1", config.cycles[1], 30, 3600],
     ["cycle2", config.cycles[2], 30, 3600],
   ]
     .map(
-      ([k, n, min, max]) =>
-        `<label class="field">${t(k)}<input name="${k}" type="number" value="${n}" min="${min}" max="${max}" step="1" required></label>`,
+      ([k, n, min, max, label]) =>
+        `<label class="field">${label || t(k)}<input name="${k}" type="number" value="${n}" min="${min}" max="${max}" step="1" required></label>`,
     )
     .join(
       "",
-    )}</div><div class="toolbar"><button class="primary" id="save-scenario">${t("save")}</button><button type="button" id="new-scenario">${t("newScenario")}</button></div></form></section><section class="panel"><h2>${t("myScenarios")}</h2>${saved.length ? saved.map((s) => `<div class="list-item"><span>${esc(s.name)}</span><button data-scenario="${s.id}">${t("load")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}</section></div>${controls()}${compare()}`;
+    )} ${config.deliveries.length ? "" : `<p class="muted full">${t("noDeliveries")}</p>`}</div><div class="toolbar"><button class="primary" id="save-scenario">${t("save")}</button><button type="button" id="new-scenario">${t("newScenario")}</button></div></form></section><section class="panel"><h2>${t("myScenarios")}</h2>${saved.length ? saved.map((s) => `<div class="list-item"><span>${esc(s.name)}</span><button data-scenario="${s.id}">${t("load")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}</section></div>${controls()}${compare()}`;
 }
 function resources() {
   if (!result) return "";
@@ -303,7 +309,9 @@ function render() {
         const c = structuredClone(config);
         c.seed = Number(f.seed);
         c.operators = Number(f.operators);
-        c.deliveries[0].at = Number(f.delivery);
+        c.deliveries.forEach((d, i) => {
+          d.at = Number(f["delivery_" + i]);
+        });
         c.cycles = [Number(f.cycle0), Number(f.cycle1), Number(f.cycle2)];
         const r = await api(
           "/scenarios" + (scenarioId ? "/" + scenarioId : ""),

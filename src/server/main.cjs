@@ -25,13 +25,19 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 async function body(req) {
-  let result = "";
+  const chunks = [];
+  let bytes = 0;
   for await (const chunk of req) {
-    result += chunk;
-    if (result.length > 64000)
+    bytes += chunk.length;
+    if (bytes > 64000)
       throw Object.assign(Error("body_too_large"), { status: 413 });
+    chunks.push(chunk);
   }
   try {
+    // Decode once, after framing is complete; reject malformed UTF-8 rather than store replacement text.
+    const result = new TextDecoder("utf-8", { fatal: true }).decode(
+      Buffer.concat(chunks, bytes),
+    );
     return JSON.parse(result || "{}");
   } catch {
     v.fail("invalid_json");
@@ -237,7 +243,7 @@ const server = http.createServer(async (req, res) => {
       if (match && method === "PUT") {
         const row = db
           .prepare("SELECT id FROM scenarios WHERE id=? AND user_id=?")
-          .get(Number(match[1]), s.user_id);
+          .get(v.recordId(Number(match[1])), s.user_id);
         if (!row) return json(res, 404, { error: "not_found" });
         const b = v.scenarioInput(await body(req));
         db.prepare(
@@ -250,12 +256,13 @@ const server = http.createServer(async (req, res) => {
         const b = await body(req);
         let config,
           name = "";
-        if (b.scenarioId) {
+        if (b.scenarioId !== undefined && b.scenarioId !== null) {
+          v.recordId(b.scenarioId);
           const row = db
             .prepare("SELECT * FROM scenarios WHERE id=? AND user_id=?")
             .get(b.scenarioId, s.user_id);
           if (!row) return json(res, 404, { error: "not_found" });
-          config = JSON.parse(row.config);
+          config = v.configuration(JSON.parse(row.config));
           name = row.name;
         } else config = v.configuration(b.config);
         const until = b.until ?? config.horizon;
@@ -297,7 +304,7 @@ const server = http.createServer(async (req, res) => {
       if (runMatch && method === "GET") {
         const row = db
           .prepare("SELECT * FROM runs WHERE id=? AND user_id=?")
-          .get(Number(runMatch[1]), s.user_id);
+          .get(v.recordId(Number(runMatch[1])), s.user_id);
         if (!row) return json(res, 404, { error: "not_found" });
         return json(res, 200, {
           ...row,

@@ -4,11 +4,13 @@ const { test } = require("node:test"),
   { spawnSync } = require("node:child_process"),
   path = require("node:path");
 const { DEFAULT, scenario, Twin } = require("../src/domain/reference.cjs");
-const exe = path.join(
-  __dirname,
-  "../build",
-  process.platform === "win32" ? "twin.exe" : "twin",
-);
+const exe =
+  process.env.NATIVE_TEST_EXE ||
+  path.join(
+    __dirname,
+    "../build",
+    process.platform === "win32" ? "twin.exe" : "twin",
+  );
 function native(requests) {
   const p = spawnSync(exe, [], {
     input: requests.map((r) => JSON.stringify(r)).join("\n") + "\n",

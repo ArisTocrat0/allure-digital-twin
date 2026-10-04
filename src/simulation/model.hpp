@@ -1,5 +1,6 @@
 #pragma once
 #include "../../third_party/json.hpp"
+#include "validation.hpp"
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -10,7 +11,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-using J = nlohmann::ordered_json;
 namespace twin {
 const std::array<std::string, 8> states = {"processing", "blocked",  "starved",
                                            "materials",  "operator", "offshift",
@@ -273,6 +273,7 @@ class Model {
 
 public:
   explicit Model(const J &input) : c(input) {
+    validateConfig(c);
     horizon = c.at("horizon");
     operators = c.at("operators");
     seed = c.at("seed").get<uint32_t>();

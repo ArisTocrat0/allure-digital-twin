@@ -34,6 +34,7 @@ function start(worker) {
     stdio: ["pipe", "pipe", "pipe"],
   });
   worker.child = child;
+  child.stdout.setEncoding("utf8"); // StringDecoder retains split multibyte sequences.
   child.stdout.on("data", (chunk) => {
     if (worker.child !== child) return;
     worker.buffer += chunk;

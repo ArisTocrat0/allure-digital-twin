@@ -48,7 +48,7 @@ const report = {
   computeSpeedup: median("jsMs") / median("nativeMs"),
   wallSpeedup: median("jsMs") / median("nativeWallMs"),
   scope:
-    "500 independent eight-hour baseline runs; snapshots/logs built each run; native process startup included only in wall time; JS warmed up; no network/UI/SQLite",
+    "500 independent eight-hour baseline runs per batch; full snapshots/logs constructed every run, only the final native snapshot is serialized and returned; one native process per batch; native startup/final output included only in wall time; JS warmed up; no HTTP/DB/UI measurement",
 };
 fs.mkdirSync(path.join(__dirname, "../docs"), { recursive: true });
 fs.writeFileSync(
