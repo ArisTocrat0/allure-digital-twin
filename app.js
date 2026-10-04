@@ -1,6 +1,6 @@
 'use strict';
 const {Twin,DEFAULT,scenario}=DigitalTwin;
-const $=id=>document.getElementById(id), names=['Кузов / подготовка','Финальная сборка','Контроль качества'], labels={processing:'Обработка',blocked:'Блокировка: выходной буфер полон',starved:'Нет входящего изделия / спрос исчерпан',materials:'Нет полного комплекта BOM',operator:'Ожидание оператора',offshift:'Вне смены',repair:'Ремонт'};
+const $=id=>document.getElementById(id), names=['Кузов / подготовка','Финальная сборка','Контроль качества'], labels={processing:'Обработка',blocked:'Блокировка: выходной буфер полон',starved:'Нет входящего изделия / спрос исчерпан',materials:'Нет полного комплекта BOM',operator:'Ожидание оператора',offshift:'Вне смены',repair:'Ремонт',horizon:'Горизонт завершён'};
 const clock=t=>[Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(x=>String(x).padStart(2,'0')).join(':');
 let model,baseline,timer=null;
 function pause(){clearInterval(timer);timer=null;$('play').textContent='▶ Запустить';}

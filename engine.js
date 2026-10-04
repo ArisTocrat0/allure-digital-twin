@@ -2,7 +2,7 @@
 'use strict';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const DEFAULT={seed:2026,horizon:28800,cycles:[360,600,420],bufferCaps:[2,2],operators:2,bom:{body:1,engine:1,wheels:4},stock:{body:12,engine:8,wheels:48},deliveries:[{at:7200,parts:{body:20,engine:24,wheels:80}}],shifts:[[0,12600],[14400,28800]],failures:[{at:10200,station:1,duration:1800}],qualityFail:0.12,reworkFail:0.15,shipEvery:3600,orders:[{id:'A-101',qty:12,due:14400},{id:'A-102',qty:16,due:28800}]};
-const STATES=['processing','blocked','starved','materials','operator','offshift','repair'];
+const STATES=['processing','blocked','starved','materials','operator','offshift','repair','horizon'];
 function validate(c){
  const int=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
  if(!int(c.seed)||!int(c.horizon,1)||c.horizon>604800||!int(c.operators,1)||c.operators>3||!int(c.shipEvery,1))throw Error('Invalid seed, horizon, operators or shipment interval');
@@ -19,7 +19,7 @@ function validate(c){
 function random(seed,id,attempt){let x=(seed ^ Math.imul(id,0x9e3779b1) ^ Math.imul(attempt+1,0x85ebca6b))>>>0;x^=x>>>16;x=Math.imul(x,0x7feb352d);x^=x>>>15;x=Math.imul(x,0x846ca68b);x^=x>>>16;return (x>>>0)/4294967296;}
 function scenario(base,key){const c=clone(base);if(key==='delay')c.deliveries[0].at+=7200;if(key==='breakdown')c.failures.push({at:5400,station:1,duration:3600});if(key==='operator')c.operators=Math.min(3,c.operators+1);if(key==='expedite')c.deliveries[0].at=Math.max(0,c.deliveries[0].at-3600);return c;}
 class Twin{
- constructor(config=DEFAULT){validate(config);this.c=clone(config);this.t=0;this.started=0;this.scrapped=0;this.produced=0;this.reworked=0;this.shipped=0;this.stock=clone(config.stock);this.received=Object.fromEntries(Object.keys(this.stock).map(k=>[k,0]));this.buffers=[[],[]];this.finished=[];this.stations=config.cycles.map((cycle,i)=>({i,cycle,job:null,remaining:0,downUntil:0,state:'starved',time:Object.fromEntries(STATES.map(s=>[s,0]))}));this.orders=clone(config.orders).sort((a,b)=>a.due-b.due).map(o=>({...o,shipped:0,completedAt:null}));this.log=[];this.timeline=[];this.events=[];let seq=0;const add=(at,type,data={},priority=0)=>this.events.push({at,type,data,priority,seq:seq++});
+ constructor(config=DEFAULT){validate(config);this.c=clone(config);config=this.c;this.t=0;this.started=0;this.scrapped=0;this.produced=0;this.reworked=0;this.shipped=0;this.stock=clone(config.stock);this.received=Object.fromEntries(Object.keys(this.stock).map(k=>[k,0]));this.buffers=[[],[]];this.finished=[];this.stations=config.cycles.map((cycle,i)=>({i,cycle,job:null,remaining:0,downUntil:0,state:'starved',time:Object.fromEntries(STATES.map(s=>[s,0]))}));this.orders=clone(config.orders).sort((a,b)=>a.due-b.due).map(o=>({...o,shipped:0,completedAt:null}));this.log=[];this.timeline=[];this.events=[];let seq=0;const add=(at,type,data={},priority=0)=>this.events.push({at,type,data:clone(data),priority,seq:seq++});
  config.deliveries.forEach(d=>add(d.at,'delivery',d,0));config.failures.forEach(f=>{add(f.at,'failure',f,1);add(f.at+f.duration,'repair',{station:f.station},2);});config.shifts.forEach(([a,b])=>{add(a,'shift',{on:true},3);add(b,'shift',{on:false},3);});for(let at=config.shipEvery;at<=config.horizon;at+=config.shipEvery)add(at,'ship',{},5);config.orders.forEach(o=>add(o.due,'deadline',{id:o.id},6));this.events.sort((a,b)=>a.at-b.at||a.priority-b.priority||a.seq-b.seq);this.index=0;this.process();this.assert();
  }
  note(type,message){this.log.push({at:this.t,type,message});}
@@ -31,9 +31,11 @@ class Twin{
   for(let loop=0;loop<12;loop++){
    let changed=false;
    for(let i=2;i>=0;i--){const s=this.stations[i];if(!s.job||s.remaining!==0)continue;
-    if(i===2){const j=s.job;const fail=random(this.c.seed,j.id,j.attempt)<(j.attempt?this.c.reworkFail:this.c.qualityFail);if(fail&&j.attempt===0){j.attempt=1;this.reworked++;s.remaining=s.cycle;this.note('quality',`#${j.id}: переделка на контроле качества`);}else{if(fail){this.scrapped++;this.note('scrap',`#${j.id}: брак после переделки`);}else{this.finished.push(j);this.produced++;this.note('ready',`#${j.id}: готово, ожидает отгрузки`);}s.job=null;}changed=true;
+    if(i===2){const j=s.job;const fail=random(this.c.seed,j.id,j.attempt)<(j.attempt?this.c.reworkFail:this.c.qualityFail);if(fail&&j.attempt===0){if(this.t===this.c.horizon){j.pendingRework=true;this.note('quality',`#${j.id}: переделка требуется, но не запущена — горизонт завершён`);continue;}j.attempt=1;this.reworked++;s.remaining=s.cycle;this.note('quality',`#${j.id}: переделка на контроле качества`);}else{if(fail){this.scrapped++;this.note('scrap',`#${j.id}: брак после переделки`);}else{this.finished.push(j);this.produced++;this.note('ready',`#${j.id}: готово, ожидает отгрузки`);}s.job=null;}changed=true;
     }else if(this.buffers[i].length<this.c.bufferCaps[i]){this.buffers[i].push(s.job);s.job=null;changed=true;}
    }
+   // Terminal boundary accepts completions, but never starts/resumes an operation.
+   if(this.t===this.c.horizon){for(const s of this.stations)s.state='horizon';break;}
    let free=this.c.operators;
    for(let i=2;i>=0;i--){const s=this.stations[i];if(s.downUntil>this.t){s.state='repair';continue;}if(!this.onShift()){s.state='offshift';continue;}if(s.job&&s.remaining===0){s.state='blocked';continue;}
     if(!s.job){if(i===0){if(this.started>=this.demand()+this.scrapped){s.state='starved';continue;}if(!this.hasParts()){s.state='materials';continue;}}else if(!this.buffers[i-1].length){s.state='starved';continue;}}
