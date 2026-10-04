@@ -1,28 +1,309 @@
-'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict');
-const {Twin,DEFAULT,scenario,run}=require('../engine');
-const clone=x=>JSON.parse(JSON.stringify(x));
-function small(p={}){return {...clone(DEFAULT),horizon:30,cycles:[2,3,2],bufferCaps:[1,1],operators:3,stock:{body:20,engine:20,wheels:80},deliveries:[],failures:[],shifts:[[0,30]],qualityFail:0,reworkFail:0,shipEvery:10,orders:[{id:'T',qty:2,due:10}],...p};}
-test('hand calculation: completions 7,10; shipment at inclusive deadline 10',()=>{const m=new Twin(small());const a=m.advance(7);assert.equal(a.produced,1);assert.equal(a.shipped,0);assert.equal(a.finished,1);const b=m.advance(10);assert.equal(b.produced,2);assert.equal(b.shipped,2);assert.equal(b.orders[0].completedAt,10);assert.deepEqual(b.log.filter(e=>e.type==='ready').map(e=>e.at),[7,10]);});
-test('atomic BOM: insufficient wheels consumes nothing',()=>{const m=new Twin(small({stock:{body:1,engine:1,wheels:3}}));m.advance(30);assert.equal(m.started,0);assert.deepEqual(m.stock,{body:1,engine:1,wheels:3});assert.equal(m.stations[0].time.materials,30);});
-test('shift preserves remaining work',()=>{const m=new Twin(small({shifts:[[0,1],[5,30]]}));m.advance(1);assert.equal(m.stations[0].remaining,1);m.advance(4);assert.equal(m.stations[0].remaining,1);m.advance(11);assert.equal(m.log.find(e=>e.type==='ready').at,11);});
-test('repair progresses outside shifts and resumes only when staffed',()=>{const m=new Twin(small({shifts:[[0,2],[8,30]],failures:[{at:1,station:0,duration:4}]}));m.advance(5);assert.equal(m.stations[0].remaining,1);assert.equal(m.stations[0].state,'offshift');m.advance(14);assert.equal(m.log.find(e=>e.type==='ready').at,14);});
-test('blocked output retained and distinguished from starvation',()=>{const m=new Twin(small({cycles:[1,10,1],orders:[{id:'T',qty:5,due:30}]}));m.advance(4);assert.equal(m.stations[0].state,'blocked');assert.equal(m.stations[0].job.id,3);assert.equal(m.buffers[0].length,1);assert.equal(m.stations[2].state,'starved');assert.ok(m.stations[0].time.blocked>0);});
-test('one rework then scrap; replacements conserve components',()=>{const s=run(small({qualityFail:1,reworkFail:1}));assert.ok(s.scrapped>0);assert.ok(s.reworked>=s.scrapped);assert.equal(s.produced,0);const counts={};for(const e of s.log.filter(e=>e.type==='quality')){counts[e.message.split(':')[0]]=(counts[e.message.split(':')[0]]||0)+1;}assert.ok(Object.values(counts).every(n=>n===1));});
-test('rework success produces vehicle once',()=>{const s=run(small({qualityFail:1,reworkFail:0}));assert.equal(s.produced,2);assert.equal(s.scrapped,0);assert.equal(s.reworked,2);});
-test('late shipment remains late even after eventual fulfillment',()=>{const s=run(small({shipEvery:12}));assert.equal(s.orders[0].completedAt,12);assert.ok(s.orders[0].completedAt>s.orders[0].due);assert.match(s.log.find(e=>e.type==='deadline').message,/0\/2/);});
-test('no-change exact equality and isolated input snapshots',()=>{const c=clone(DEFAULT),a=new Twin(c),b=new Twin(scenario(c,'base'));assert.deepEqual(a.advance(c.horizon),b.advance(c.horizon));const changed=scenario(c,'delay');changed.stock.engine=0;assert.equal(c.stock.engine,8);assert.equal(a.c.stock.engine,8);assert.equal(DEFAULT.deliveries[0].at,7200);});
-test('chunking and pause/resume preserve results and event log',()=>{const a=new Twin(DEFAULT),b=new Twin(DEFAULT);a.advance(28800);for(let t=60;t<=28800;t+=60)b.advance(t);const aa=a.snapshot(),bb=b.snapshot();delete aa.timeline;delete bb.timeline;assert.deepEqual(aa,bb);assert.deepEqual(b.advance(28800),b.snapshot());});
-test('seed determinism and scenario resource limits over 40 seeds',()=>{for(let seed=0;seed<40;seed++)for(const key of ['base','delay','breakdown','operator','expedite']){const c=scenario({...clone(DEFAULT),seed},key),m=new Twin(c);m.advance(c.horizon);assert.ok(m.assert());assert.equal(m.stations.length,3);assert.ok(m.stations.every(s=>Object.values(s.time).reduce((a,b)=>a+b,0)===c.horizon));if(seed===1)assert.deepEqual(run(c),run(c));}});
-test('extra operator cannot create material or machines',()=>{const c=small({operators:1,stock:{body:1,engine:1,wheels:4}}),a=run(c),b=run({...c,operators:3});assert.equal(a.started,1);assert.equal(b.started,1);assert.equal(b.stations.length,3);assert.deepEqual(a.stock,b.stock);});
-test('simultaneous completion/failure, delivery and shipping have stable ordering',()=>{const c=small({cycles:[2,2,2],failures:[{at:2,station:0,duration:3}],deliveries:[{at:2,parts:{engine:1}}],shipEvery:6});const a=run(c);assert.equal(a.log.find(e=>e.type==='ready').at,6);assert.equal(a.log.find(e=>e.type==='shipment').at,6);assert.deepEqual(a,run(c));});
-test('overlapping repairs keep latest repair end',()=>{const m=new Twin(small({failures:[{at:1,station:0,duration:5},{at:2,station:0,duration:8}]}));m.advance(6);assert.equal(m.stations[0].state,'repair');m.advance(10);assert.equal(m.stations[0].state,'processing');assert.equal(m.stations[0].remaining,1);});
-test('invalid configuration and backwards time rejected',()=>{assert.throws(()=>new Twin(small({operators:0})));assert.throws(()=>new Twin(small({cycles:[0,2,2]})));assert.throws(()=>new Twin(small({shifts:[[0,10],[9,20]]})));const m=new Twin(small());m.advance(5);assert.throws(()=>m.advance(4));assert.throws(()=>m.advance(31));});
+"use strict";
+const { test } = require("node:test"),
+  assert = require("node:assert/strict");
+const { Twin, DEFAULT, scenario, run } = require("../src/domain/reference.cjs");
+const clone = (x) => JSON.parse(JSON.stringify(x));
+function small(p = {}) {
+  return {
+    ...clone(DEFAULT),
+    horizon: 30,
+    cycles: [2, 3, 2],
+    bufferCaps: [1, 1],
+    operators: 3,
+    stock: { body: 20, engine: 20, wheels: 80 },
+    deliveries: [],
+    failures: [],
+    shifts: [[0, 30]],
+    qualityFail: 0,
+    reworkFail: 0,
+    shipEvery: 10,
+    orders: [{ id: "T", qty: 2, due: 10 }],
+    ...p,
+  };
+}
+test("hand calculation: completions 7,10; shipment at inclusive deadline 10", () => {
+  const m = new Twin(small());
+  const a = m.advance(7);
+  assert.equal(a.produced, 1);
+  assert.equal(a.shipped, 0);
+  assert.equal(a.finished, 1);
+  const b = m.advance(10);
+  assert.equal(b.produced, 2);
+  assert.equal(b.shipped, 2);
+  assert.equal(b.orders[0].completedAt, 10);
+  assert.deepEqual(
+    b.log.filter((e) => e.type === "ready").map((e) => e.at),
+    [7, 10],
+  );
+});
+test("atomic BOM: insufficient wheels consumes nothing", () => {
+  const m = new Twin(small({ stock: { body: 1, engine: 1, wheels: 3 } }));
+  m.advance(30);
+  assert.equal(m.started, 0);
+  assert.deepEqual(m.stock, { body: 1, engine: 1, wheels: 3 });
+  assert.equal(m.stations[0].time.materials, 30);
+});
+test("shift preserves remaining work", () => {
+  const m = new Twin(
+    small({
+      shifts: [
+        [0, 1],
+        [5, 30],
+      ],
+    }),
+  );
+  m.advance(1);
+  assert.equal(m.stations[0].remaining, 1);
+  m.advance(4);
+  assert.equal(m.stations[0].remaining, 1);
+  m.advance(11);
+  assert.equal(m.log.find((e) => e.type === "ready").at, 11);
+});
+test("repair progresses outside shifts and resumes only when staffed", () => {
+  const m = new Twin(
+    small({
+      shifts: [
+        [0, 2],
+        [8, 30],
+      ],
+      failures: [{ at: 1, station: 0, duration: 4 }],
+    }),
+  );
+  m.advance(5);
+  assert.equal(m.stations[0].remaining, 1);
+  assert.equal(m.stations[0].state, "offshift");
+  m.advance(14);
+  assert.equal(m.log.find((e) => e.type === "ready").at, 14);
+});
+test("blocked output retained and distinguished from starvation", () => {
+  const m = new Twin(
+    small({ cycles: [1, 10, 1], orders: [{ id: "T", qty: 5, due: 30 }] }),
+  );
+  m.advance(4);
+  assert.equal(m.stations[0].state, "blocked");
+  assert.equal(m.stations[0].job.id, 3);
+  assert.equal(m.buffers[0].length, 1);
+  assert.equal(m.stations[2].state, "starved");
+  assert.ok(m.stations[0].time.blocked > 0);
+});
+test("one rework then scrap; replacements conserve components", () => {
+  const s = run(small({ qualityFail: 1, reworkFail: 1 }));
+  assert.ok(s.scrapped > 0);
+  assert.ok(s.reworked >= s.scrapped);
+  assert.equal(s.produced, 0);
+  const counts = {};
+  for (const e of s.log.filter((e) => e.type === "quality")) {
+    counts[e.message.split(":")[0]] =
+      (counts[e.message.split(":")[0]] || 0) + 1;
+  }
+  assert.ok(Object.values(counts).every((n) => n === 1));
+});
+test("rework success produces vehicle once", () => {
+  const s = run(small({ qualityFail: 1, reworkFail: 0 }));
+  assert.equal(s.produced, 2);
+  assert.equal(s.scrapped, 0);
+  assert.equal(s.reworked, 2);
+});
+test("late shipment remains late even after eventual fulfillment", () => {
+  const s = run(small({ shipEvery: 12 }));
+  assert.equal(s.orders[0].completedAt, 12);
+  assert.ok(s.orders[0].completedAt > s.orders[0].due);
+  assert.match(s.log.find((e) => e.type === "deadline").message, /0\/2/);
+});
+test("no-change exact equality and isolated input snapshots", () => {
+  const c = clone(DEFAULT),
+    a = new Twin(c),
+    b = new Twin(scenario(c, "base"));
+  assert.deepEqual(a.advance(c.horizon), b.advance(c.horizon));
+  const changed = scenario(c, "delay");
+  changed.stock.engine = 0;
+  assert.equal(c.stock.engine, 8);
+  assert.equal(a.c.stock.engine, 8);
+  assert.equal(DEFAULT.deliveries[0].at, 7200);
+});
+test("chunking and pause/resume preserve results and event log", () => {
+  const a = new Twin(DEFAULT),
+    b = new Twin(DEFAULT);
+  a.advance(28800);
+  for (let t = 60; t <= 28800; t += 60) b.advance(t);
+  const aa = a.snapshot(),
+    bb = b.snapshot();
+  delete aa.timeline;
+  delete bb.timeline;
+  assert.deepEqual(aa, bb);
+  assert.deepEqual(b.advance(28800), b.snapshot());
+});
+test("seed determinism and scenario resource limits over 40 seeds", () => {
+  for (let seed = 0; seed < 40; seed++)
+    for (const key of ["base", "delay", "breakdown", "operator", "expedite"]) {
+      const c = scenario({ ...clone(DEFAULT), seed }, key),
+        m = new Twin(c);
+      m.advance(c.horizon);
+      assert.ok(m.assert());
+      assert.equal(m.stations.length, 3);
+      assert.ok(
+        m.stations.every(
+          (s) => Object.values(s.time).reduce((a, b) => a + b, 0) === c.horizon,
+        ),
+      );
+      if (seed === 1) assert.deepEqual(run(c), run(c));
+    }
+});
+test("extra operator cannot create material or machines", () => {
+  const c = small({ operators: 1, stock: { body: 1, engine: 1, wheels: 4 } }),
+    a = run(c),
+    b = run({ ...c, operators: 3 });
+  assert.equal(a.started, 1);
+  assert.equal(b.started, 1);
+  assert.equal(b.stations.length, 3);
+  assert.deepEqual(a.stock, b.stock);
+});
+test("simultaneous completion/failure, delivery and shipping have stable ordering", () => {
+  const c = small({
+    cycles: [2, 2, 2],
+    failures: [{ at: 2, station: 0, duration: 3 }],
+    deliveries: [{ at: 2, parts: { engine: 1 } }],
+    shipEvery: 6,
+  });
+  const a = run(c);
+  assert.equal(a.log.find((e) => e.type === "ready").at, 6);
+  assert.equal(a.log.find((e) => e.type === "shipment").at, 6);
+  assert.deepEqual(a, run(c));
+});
+test("overlapping repairs keep latest repair end", () => {
+  const m = new Twin(
+    small({
+      failures: [
+        { at: 1, station: 0, duration: 5 },
+        { at: 2, station: 0, duration: 8 },
+      ],
+    }),
+  );
+  m.advance(6);
+  assert.equal(m.stations[0].state, "repair");
+  m.advance(10);
+  assert.equal(m.stations[0].state, "processing");
+  assert.equal(m.stations[0].remaining, 1);
+});
+test("invalid configuration and backwards time rejected", () => {
+  assert.throws(() => new Twin(small({ operators: 0 })));
+  assert.throws(() => new Twin(small({ cycles: [0, 2, 2] })));
+  assert.throws(
+    () =>
+      new Twin(
+        small({
+          shifts: [
+            [0, 10],
+            [9, 20],
+          ],
+        }),
+      ),
+  );
+  const m = new Twin(small());
+  m.advance(5);
+  assert.throws(() => m.advance(4));
+  assert.throws(() => m.advance(31));
+});
 
-test('external delivery mutation cannot change queued receipt',()=>{const c=clone(DEFAULT),m=new Twin(c);c.deliveries[0].parts.engine=99;c.deliveries[0].at=1;c.deliveries.push({at:2,parts:{engine:500}});assert.equal(m.advance(7200).received.engine,24);assert.equal(m.c.deliveries[0].parts.engine,24);assert.equal(DEFAULT.deliveries[0].parts.engine,24);});
-test('external failure mutation cannot change repair or chunking',()=>{const c=small({failures:[{at:1,station:0,duration:2}]}),one=new Twin(c),chunks=new Twin(c),reference=new Twin(clone(c));c.failures[0].duration=4;c.failures[0].station=2;c.failures[0].at=2;const before=chunks.advance(3);assert.equal(before.stations[0].downUntil,3);assert.equal(before.stations[0].remaining,1);assert.equal(before.stations[0].state,'processing');for(let t=4;t<=30;t++)chunks.advance(t);const clean=m=>{const s=m.snapshot();delete s.timeline;return s;};one.advance(30);reference.advance(30);assert.deepEqual(clean(one),clean(chunks));assert.deepEqual(clean(one),clean(reference));assert.equal(one.log.find(e=>e.type==='ready').at,9);});
-test('returned snapshot mutations cannot affect runtime',()=>{const m=new Twin(small()),s=m.snapshot();s.stock.engine=0;s.stations[0].job.id=99;s.log.length=0;s.orders[0].qty=99;m.advance(30);assert.deepEqual(m.snapshot(),run(small()));});
-test('horizon accepts delivery without starting a car or consuming BOM',()=>{const c=small({horizon:3,shifts:[[0,40]],stock:{body:0,engine:0,wheels:0},deliveries:[{at:3,parts:{body:1,engine:1,wheels:4}}]}),s=run(c);assert.equal(s.started,0);assert.deepEqual(s.stock,{body:1,engine:1,wheels:4});assert.deepEqual(s.received,s.stock);assert.ok(s.stations.every(st=>st.state==='horizon'));assert.ok(!s.log.some(e=>e.type==='start'));});
-test('horizon completes upstream work but starts no downstream or replacement operation',()=>{const s=run(small({horizon:2,shifts:[[0,40]]}));assert.equal(s.started,1);assert.equal(s.buffers[0][0].id,1);assert.ok(s.stations.every(st=>st.job===null));assert.deepEqual(s.stock,{body:19,engine:19,wheels:76});});
-test('horizon accepts final completion and shipment at inclusive deadline',()=>{const s=run(small({horizon:7,shifts:[[0,40]],shipEvery:7,orders:[{id:'T',qty:1,due:7}]}));assert.equal(s.produced,1);assert.equal(s.shipped,1);assert.equal(s.orders[0].completedAt,7);assert.equal(s.finished,0);assert.ok(s.log.some(e=>e.type==='deadline'&&e.message.endsWith('1/1')));});
-test('horizon quality failure records pending rework without starting it',()=>{const m=new Twin(small({horizon:7,shifts:[[0,40]],qualityFail:1,orders:[{id:'T',qty:1,due:7}]})),s=m.advance(7);assert.equal(s.reworked,0);assert.equal(s.scrapped,0);assert.equal(s.produced,0);assert.equal(s.stations[2].job.pendingRework,true);assert.equal(s.stations[2].job.attempt,0);assert.equal(s.stations[2].remaining,0);assert.equal(s.stations[2].state,'horizon');assert.ok(m.assert());assert.deepEqual(m.advance(7),s);});
+test("external delivery mutation cannot change queued receipt", () => {
+  const c = clone(DEFAULT),
+    m = new Twin(c);
+  c.deliveries[0].parts.engine = 99;
+  c.deliveries[0].at = 1;
+  c.deliveries.push({ at: 2, parts: { engine: 500 } });
+  assert.equal(m.advance(7200).received.engine, 24);
+  assert.equal(m.c.deliveries[0].parts.engine, 24);
+  assert.equal(DEFAULT.deliveries[0].parts.engine, 24);
+});
+test("external failure mutation cannot change repair or chunking", () => {
+  const c = small({ failures: [{ at: 1, station: 0, duration: 2 }] }),
+    one = new Twin(c),
+    chunks = new Twin(c),
+    reference = new Twin(clone(c));
+  c.failures[0].duration = 4;
+  c.failures[0].station = 2;
+  c.failures[0].at = 2;
+  const before = chunks.advance(3);
+  assert.equal(before.stations[0].downUntil, 3);
+  assert.equal(before.stations[0].remaining, 1);
+  assert.equal(before.stations[0].state, "processing");
+  for (let t = 4; t <= 30; t++) chunks.advance(t);
+  const clean = (m) => {
+    const s = m.snapshot();
+    delete s.timeline;
+    return s;
+  };
+  one.advance(30);
+  reference.advance(30);
+  assert.deepEqual(clean(one), clean(chunks));
+  assert.deepEqual(clean(one), clean(reference));
+  assert.equal(one.log.find((e) => e.type === "ready").at, 9);
+});
+test("returned snapshot mutations cannot affect runtime", () => {
+  const m = new Twin(small()),
+    s = m.snapshot();
+  s.stock.engine = 0;
+  s.stations[0].job.id = 99;
+  s.log.length = 0;
+  s.orders[0].qty = 99;
+  m.advance(30);
+  assert.deepEqual(m.snapshot(), run(small()));
+});
+test("horizon accepts delivery without starting a car or consuming BOM", () => {
+  const c = small({
+      horizon: 3,
+      shifts: [[0, 40]],
+      stock: { body: 0, engine: 0, wheels: 0 },
+      deliveries: [{ at: 3, parts: { body: 1, engine: 1, wheels: 4 } }],
+    }),
+    s = run(c);
+  assert.equal(s.started, 0);
+  assert.deepEqual(s.stock, { body: 1, engine: 1, wheels: 4 });
+  assert.deepEqual(s.received, s.stock);
+  assert.ok(s.stations.every((st) => st.state === "horizon"));
+  assert.ok(!s.log.some((e) => e.type === "start"));
+});
+test("horizon completes upstream work but starts no downstream or replacement operation", () => {
+  const s = run(small({ horizon: 2, shifts: [[0, 40]] }));
+  assert.equal(s.started, 1);
+  assert.equal(s.buffers[0][0].id, 1);
+  assert.ok(s.stations.every((st) => st.job === null));
+  assert.deepEqual(s.stock, { body: 19, engine: 19, wheels: 76 });
+});
+test("horizon accepts final completion and shipment at inclusive deadline", () => {
+  const s = run(
+    small({
+      horizon: 7,
+      shifts: [[0, 40]],
+      shipEvery: 7,
+      orders: [{ id: "T", qty: 1, due: 7 }],
+    }),
+  );
+  assert.equal(s.produced, 1);
+  assert.equal(s.shipped, 1);
+  assert.equal(s.orders[0].completedAt, 7);
+  assert.equal(s.finished, 0);
+  assert.ok(
+    s.log.some((e) => e.type === "deadline" && e.message.endsWith("1/1")),
+  );
+});
+test("horizon quality failure records pending rework without starting it", () => {
+  const m = new Twin(
+      small({
+        horizon: 7,
+        shifts: [[0, 40]],
+        qualityFail: 1,
+        orders: [{ id: "T", qty: 1, due: 7 }],
+      }),
+    ),
+    s = m.advance(7);
+  assert.equal(s.reworked, 0);
+  assert.equal(s.scrapped, 0);
+  assert.equal(s.produced, 0);
+  assert.equal(s.stations[2].job.pendingRework, true);
+  assert.equal(s.stations[2].job.attempt, 0);
+  assert.equal(s.stations[2].remaining, 0);
+  assert.equal(s.stations[2].state, "horizon");
+  assert.ok(m.assert());
+  assert.deepEqual(m.advance(7), s);
+});

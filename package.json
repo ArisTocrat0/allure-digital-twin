@@ -1,1 +1,17 @@
-{"name":"allure-digital-twin","version":"0.1.0","private":true,"description":"Synthetic ALLUR hackathon production-line simulator","scripts":{"start":"node server.js","test":"node --test tests/*.test.js","test:ui":"node tests/ui.cjs"},"engines":{"node":">=20"}}
+{
+  "name": "allure-digital-twin",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Synthetic ALLUR production simulator with a C++17 engine, SQLite and RU/KK/EN UI",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "start": "node server.js",
+    "pretest": "node scripts/build.cjs",
+    "test": "node --test tests/*.test.js",
+    "test:ui": "node tests/app-ui.cjs",
+    "benchmark": "node scripts/benchmark.cjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

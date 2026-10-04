@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-04T10:12:13.164Z",
+  "node": "v24.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "compiler": "Zig 0.15.2 C++17 -O3 -DNDEBUG",
+  "repeat": 500,
+  "samples": [
+    {
+      "jsMs": 168.3738,
+      "nativeMs": 141.9067,
+      "nativeWallMs": 155.9008
+    },
+    {
+      "jsMs": 167.6409,
+      "nativeMs": 137.0636,
+      "nativeWallMs": 144.1064
+    },
+    {
+      "jsMs": 174.7532,
+      "nativeMs": 144.7325,
+      "nativeWallMs": 152.05140000000006
+    },
+    {
+      "jsMs": 197.80309999999986,
+      "nativeMs": 155.2307,
+      "nativeWallMs": 162.00970000000007
+    },
+    {
+      "jsMs": 191.18720000000008,
+      "nativeMs": 152.7742,
+      "nativeWallMs": 159.11799999999994
+    }
+  ],
+  "median": {
+    "jsMs": 174.7532,
+    "nativeMs": 144.7325,
+    "nativeWallMs": 155.9008
+  },
+  "computeSpeedup": 1.207421968113589,
+  "wallSpeedup": 1.1209256142367454,
+  "scope": "500 independent eight-hour baseline runs; snapshots/logs built each run; native process startup included only in wall time; JS warmed up; no network/UI/SQLite"
+}

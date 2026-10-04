@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ALLUR Production Lab</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <a id="skip" class="skip" href="#content">Перейти к содержимому</a>
+    <header>
+      <a class="brand" href="#overview">A / ALLUR <span>PRODUCTION LAB</span></a
+      ><label class="language"
+        ><span id="language-label">Язык</span
+        ><select id="language" aria-labelledby="language-label">
+          <option value="ru">Русский</option>
+          <option value="kk">Қазақша</option>
+          <option value="en">English</option>
+        </select></label
+      >
+    </header>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <div id="shell"></div>
+    <script src="/i18n.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
