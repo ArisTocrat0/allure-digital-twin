@@ -38,10 +38,27 @@ function recordId(value) {
   if (!Number.isSafeInteger(value) || value < 1) fail("invalid_input");
   return value;
 }
+// JSON can escape lone UTF-16 surrogates that are not valid Unicode scalar values.
+// Check keys as well as values, including optional metadata forwarded to the native parser.
+function unicodeScalars(input) {
+  const pending = [input];
+  while (pending.length) {
+    const value = pending.pop();
+    if (typeof value === "string") {
+      if (!value.isWellFormed()) fail("invalid_config");
+    } else if (value && typeof value === "object") {
+      for (const [key, child] of Object.entries(value)) {
+        if (!key.isWellFormed()) fail("invalid_config");
+        pending.push(child);
+      }
+    }
+  }
+}
 function configuration(input) {
   if (!input || typeof input !== "object") fail();
   const c = structuredClone(input);
   try {
+    unicodeScalars(c);
     validate(c);
     integer(c.seed, 0, 4294967295);
     integer(c.horizon, 1, 28800);

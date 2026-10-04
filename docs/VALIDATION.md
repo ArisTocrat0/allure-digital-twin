@@ -1,7 +1,7 @@
 # Validation checkpoint — 2026-10-04
 
 - F010, Windows x64, Node v24.19.0; C++17 compiled with Zig 0.15.2, `-O3 -DNDEBUG`.
-- `node --test tests/*.test.js`: 41 tests including nested API tests; all passed. The model batch covers 40 seeds × 5 scenarios. Native equivalence covers 200 scenario snapshots plus 80 chunked boundary configurations, including full logs.
+- `node --test tests/*.test.js`: 43 tests including nested API tests; all passed. The model batch covers 40 seeds × 5 scenarios. Native equivalence covers 200 scenario snapshots plus 80 chunked boundary configurations, including full logs.
 - `node tests/app-ui.cjs`: passed with installed Playwright + separate headless Microsoft Edge. Registration, login, logout, repeat calculation/reset, five templates, saved scenario/run, profile/reload, RU/KK/EN across five pages, 390px, keyboard and zero JS errors. Zero- and two-delivery scenarios load and save without fabricating or losing deliveries.
 - API tests also verify six concurrent native worker requests without scenario mixing, CSRF, second-account isolation, SQLite persistence across restart, password change and session revocation.
 - Browser screenshots inspected: `artifacts/app-en-desktop.png`, `artifacts/app-en-mobile.png`; RU/KK screenshots also generated. They are local QA artifacts, excluded from Git.
@@ -32,3 +32,9 @@ The local server was restarted after the fixes, PID 4832, and health returned 20
 No runtime checkpoint restore/branching, Monte Carlo, probabilistic lateness intervals, ML, real factory data, production security certification or usability study with older adults. Scenario edits and API time steps replay independently from t=0. Historical runs preserve their own configuration; they are not live engine snapshots. Kazakh text needs native editorial review before a real pilot.
 
 Windows Computer Use/node_repl is not available in this session. UI QA used controlled Playwright browser sessions; it did not inspect or automate the user's authenticated browser. GitHub repository creation was coordinated separately; source publication uses standard Git Credential Manager.
+
+## P3 Unicode configuration boundary
+
+The complete release suite passed 43 tests after the Unicode fix. Lone high and low UTF-16 surrogates in order IDs return HTTP 400 `invalid_config` for create/update/direct simulate. Rejected writes leave the saved scenario list unchanged. A valid paired emoji is created with HTTP 201 and then simulated by saved scenario ID with HTTP 200; the complete native result matches the JS reference. Unit coverage also includes malformed nested metadata/keys, valid Cyrillic/Kazakh text and a valid supplementary scalar pair.
+
+The check runs before persistence/native serialization. No C++ or UI code changed for P3, so the earlier native rebuild/UBSan and UI results above remain the P2 checkpoint evidence, not newly repeated P3 checks. The user database is preserved; existing invalid rows, if any, are not rewritten or deleted.

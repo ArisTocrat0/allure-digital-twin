@@ -380,6 +380,54 @@ test("server authentication, authorization, persistence and validation", async (
         }
       },
     );
+    await t.test(
+      "save and simulate reject lone surrogates but preserve paired emoji",
+      async () => {
+        const before = (await req("/scenarios", "GET", null, a)).body.scenarios;
+        for (const invalidId of ["\ud800", "\udc00"]) {
+          const config = structuredClone(c);
+          config.orders[0].id = invalidId;
+          for (const [route, method, data] of [
+            ["/scenarios", "POST", { name: "Invalid Unicode", config }],
+            ["/scenarios/" + id, "PUT", { name: "Invalid Unicode", config }],
+            ["/simulate", "POST", { config }],
+          ]) {
+            const r = await req(route, method, data, a);
+            assert.equal(r.status, 400);
+            assert.equal(r.body.error, "invalid_config");
+          }
+        }
+        assert.deepEqual(
+          (await req("/scenarios", "GET", null, a)).body.scenarios,
+          before,
+        );
+        const config = structuredClone(c);
+        config.orders[0].id = "Order \ud83d\ude97";
+        const saved = await req(
+          "/scenarios",
+          "POST",
+          { name: "Valid Unicode", config },
+          a,
+        );
+        assert.equal(saved.status, 201);
+        assert.equal(saved.body.config.orders[0].id, config.orders[0].id);
+        const simulated = await req(
+          "/simulate",
+          "POST",
+          { scenarioId: saved.body.id },
+          a,
+        );
+        assert.equal(simulated.status, 200);
+        assert.equal(
+          simulated.body.result.snapshot.orders[0].id,
+          config.orders[0].id,
+        );
+        assert.deepEqual(
+          simulated.body.result.snapshot,
+          require("../src/domain/reference.cjs").run(config),
+        );
+      },
+    );
     await t.test("profile persists through server restart", async () => {
       assert.equal(
         (await req("/me", "PUT", { name: "Updated user", language: "kk" }, a))
@@ -393,7 +441,7 @@ test("server authentication, authorization, persistence and validation", async (
       assert.equal(r.body.user.language, "kk");
       assert.equal(
         (await req("/scenarios", "GET", null, a)).body.scenarios.length,
-        1,
+        2,
       );
       assert.equal((await req("/runs", "GET", null, a)).body.runs.length, 1);
     });

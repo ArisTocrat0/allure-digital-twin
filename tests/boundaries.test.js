@@ -165,3 +165,31 @@ test("native stdout decoding preserves UTF-8 split at every byte", async () => {
   const result = await module.exports(DEFAULT, 0);
   assert.equal(result.snapshot.log[0].message, text);
 });
+
+test("configuration accepts scalar sequences and rejects lone surrogate values and keys", () => {
+  for (const id of [
+    "\ud800",
+    "\udc00",
+    "A\ud800B",
+    "\ud800\ud800",
+    "\udc00\ud800",
+  ]) {
+    const c = structuredClone(DEFAULT);
+    c.orders[0].id = id;
+    assert.throws(() => configuration(c), { message: "invalid_config" });
+  }
+  for (const extra of [
+    { metadata: { note: "\ud800" } },
+    { ["\udc00"]: "value" },
+  ]) {
+    assert.throws(
+      () => configuration({ ...structuredClone(DEFAULT), ...extra }),
+      { message: "invalid_config" },
+    );
+  }
+  for (const id of ["Order \ud83d\ude97", "Жанар", "Қазақша", "\ud800\udc00"]) {
+    const c = structuredClone(DEFAULT);
+    c.orders[0].id = id;
+    assert.equal(configuration(c).orders[0].id, id);
+  }
+});
