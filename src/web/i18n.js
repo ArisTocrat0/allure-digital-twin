@@ -516,3 +516,10 @@ window.I18N = {
     changed: "Өзгерістер сақталды",
   },
 };
+
+Object.assign(window.I18N.ru,{caseData:"Данные кейса",simulation:"Демонстрационный симулятор",factoryOverview:"Обзор завода"});
+Object.assign(window.I18N.en,{caseData:"Case data",simulation:"Demonstration simulator",factoryOverview:"Factory overview"});
+Object.assign(window.I18N.kk,{caseData:"Кейс деректері",simulation:"Демонстрациялық симулятор",factoryOverview:"Зауытқа шолу"});
+window.I18N.ru.line="Участки и оборудование";
+window.I18N.en.line="Sections and equipment";
+window.I18N.kk.line="Учаскелер мен жабдықтар";

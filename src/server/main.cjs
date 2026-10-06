@@ -205,6 +205,26 @@ const server = http.createServer(async (req, res) => {
         );
         return json(res, 200, { user: { id: s.user_id, ...a }, csrf: s.csrf });
       }
+      if (route === '/api/factory' && method === 'GET') {
+        const factory=require('../domain/factory.cjs'), row=db.prepare('SELECT dataset FROM factory_datasets WHERE user_id=?').get(s.user_id);
+        const dataset=row?factory.validate(JSON.parse(row.dataset)):structuredClone(factory.DEFAULT);
+        return json(res,200,{dataset,overview:factory.overview(dataset,url.searchParams.get('from'),url.searchParams.get('to')),saved:!!row});
+      }
+      if (route === '/api/factory' && method === 'PUT') {
+        const factory=require('../domain/factory.cjs'),dataset=factory.validate((await body(req)).dataset);
+        db.prepare('INSERT INTO factory_datasets(user_id,dataset,updated_at) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET dataset=excluded.dataset,updated_at=excluded.updated_at').run(s.user_id,JSON.stringify(dataset),Date.now());
+        return json(res,200,{dataset,overview:factory.overview(dataset),saved:true});
+      }
+      if (route === '/api/factory/forecast' && method === 'POST') {
+        rate(req,'factory',30);return json(res,200,require('../domain/factory.cjs').forecast(await body(req)));
+      }
+      if (route === '/api/decisions' && method === 'POST') {
+        const b=await body(req),decisions=require('./decisions.cjs');
+        rate(req,b.kind==='recommend'?'recommendations':'risk-assessment',b.kind==='recommend'?12:120);
+        if(b.kind==='assess')return json(res,200,await decisions.assess(b,simulate));
+        if(b.kind==='recommend')return json(res,200,await decisions.recommend(b,simulate));
+        v.fail();
+      }
       if (route === "/api/analytics" && method === "POST") {
         rate(req, "analytics", 12);
         const b = await body(req), analytics = require('./analytics.cjs');
@@ -329,6 +349,9 @@ const server = http.createServer(async (req, res) => {
       "/": "index.html",
       "/app.js": "app.js",
       "/lab.js": "lab.js",
+      "/decision.js": "decision.js",
+      "/factory.js": "factory.js",
+      "/factory-domain.js": "../domain/factory.cjs",
       "/style.css": "style.css",
       "/i18n.js": "i18n.js",
     };
@@ -336,7 +359,7 @@ const server = http.createServer(async (req, res) => {
     if (!file) return json(res, 404, { error: "not_found" });
     res.setHeader(
       "Content-Type",
-      file.endsWith(".js")
+      (file.endsWith(".js") || file.endsWith(".cjs"))
         ? "text/javascript; charset=utf-8"
         : file.endsWith(".css")
           ? "text/css; charset=utf-8"

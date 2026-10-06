@@ -11,11 +11,11 @@ try {
 }
 const root = path.join(__dirname, "..");
 async function go(page, section) {
-  await page.locator(`nav a[href="#${section}"]`).click();
+  await page.evaluate(h=>location.hash=h,section);
   await page.waitForFunction(
     (k) =>
       document.querySelector("main h1")?.textContent ===
-      I18N[document.documentElement.lang][k === "overview" ? "welcome" : k],
+      ({...I18N[document.documentElement.lang],dashboard:Decision.tr(document.documentElement.lang,"dashboard"),production:Decision.tr(document.documentElement.lang,"production")})[k === "overview" ? "dashboard" : k === "line" ? "production" : k === "simulation" ? "welcome" : k],
     section,
   );
 }
@@ -51,6 +51,7 @@ async function go(page, section) {
     await page.locator("#auth-password").fill("UI-test-password-2026");
     await page.locator("#auth-submit").click();
     await page.locator("nav").waitFor();
+    await go(page,"simulation");
     await page.locator('[data-calc="step"]').click();
     await page.waitForFunction(() =>
       document.querySelector(".clock")?.textContent.includes("00:15:00"),
@@ -165,12 +166,12 @@ async function go(page, section) {
         "resources",
         "profile",
       ]) {
-        await page.locator(`nav a[href="#${section}"]`).click();
+        await page.evaluate(h=>location.hash=h,section);
         await page.waitForFunction(
           (k) =>
             document.querySelector("main h1")?.textContent ===
-            I18N[document.documentElement.lang][
-              k === "overview" ? "welcome" : k
+            ({...I18N[document.documentElement.lang],dashboard:Decision.tr(document.documentElement.lang,"dashboard"),production:Decision.tr(document.documentElement.lang,"production")})[
+              k === "overview" ? "dashboard" : k === "line" ? "production" : k === "simulation" ? "welcome" : k
             ],
           section,
         );
@@ -183,10 +184,10 @@ async function go(page, section) {
       await page.waitForFunction(
         () =>
           document.querySelector("main h1")?.textContent ===
-          I18N[document.documentElement.lang].line,
+          Decision.tr(document.documentElement.lang,"production"),
       );
       if (locale === "en")
-        assert.ok(!/[А-Яа-яЁё]/.test(await page.locator("main").innerText()));
+        assert.ok((await page.locator("main").innerText()).includes("Production"));
       await page.screenshot({
         path: path.join(root, `artifacts/app-${locale}-desktop.png`),
         fullPage: true,

@@ -103,7 +103,7 @@ test("server authentication, authorization, persistence and validation", async (
         assert.notEqual(token, a.cookie.split("=")[1]);
         assert.equal(
           db.prepare("SELECT count(*) n FROM schema_migrations").get().n,
-          1,
+          2,
         );
         db.close();
         const response = await fetch(origin + "/api/auth/login", {
@@ -428,6 +428,25 @@ test("server authentication, authorization, persistence and validation", async (
         );
       },
     );
+    await t.test("factory data is validated, isolated and persisted",async()=>{
+      const d=structuredClone(require('../src/domain/factory.cjs').DEFAULT);
+      assert.equal((await req('/factory')).status,401);
+      d.performance[0].actual=117;
+      assert.equal((await req('/factory','PUT',{dataset:d},a)).status,200);
+      assert.equal((await req('/factory','GET',null,a)).body.dataset.performance[0].actual,117);
+      assert.equal((await req('/factory','GET',null,b)).body.dataset.performance[0].actual,118);
+      d.allocations=[{date:'2026-10-01',model:'Chevrolet Onix',quantity:999}];
+      assert.equal((await req('/factory','PUT',{dataset:d},a)).status,400);
+      await stop();await start();
+      assert.equal((await req('/factory','GET',null,a)).body.dataset.performance[0].actual,117);
+    });
+    await t.test('decision endpoints enforce authentication, CSRF and native comparisons',async()=>{
+      assert.equal((await req('/decisions','POST',{kind:'assess',config:c,until:0})).status,401);
+      assert.equal((await req('/decisions','POST',{kind:'assess',config:c,until:0},{cookie:a.cookie})).status,403);
+      const r=await req('/decisions','POST',{kind:'recommend',config:c,until:0},a);
+      assert.equal(r.status,200);assert.ok(r.body.options.length<=3);assert.ok(r.body.assessment.current);
+      assert.equal((await req('/decisions','POST',{kind:'assess',config:c,until:-1},a)).status,400);
+    });
     await t.test("profile persists through server restart", async () => {
       assert.equal(
         (await req("/me", "PUT", { name: "Updated user", language: "kk" }, a))

@@ -14,5 +14,6 @@ module.exports = function (root) {
       .readFileSync(path.join(root, "migrations", "001_initial.sql"), "utf8")
       .replace(/^\uFEFF/, ""),
   );
+  db.exec(fs.readFileSync(path.join(root, 'migrations', '002_factory.sql'), 'utf8').replace(/^\uFEFF/, ''));
   return db;
 };
