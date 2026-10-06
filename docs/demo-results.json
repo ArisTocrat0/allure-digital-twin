@@ -1,0 +1,547 @@
+{
+  "synthetic": true,
+  "costsAreAssumptions": true,
+  "results": [
+    {
+      "key": "base",
+      "shipped": 28,
+      "produced": 28,
+      "firstOrderCompleted": 18000,
+      "lateOrders": 1
+    },
+    {
+      "key": "delay",
+      "shipped": 26,
+      "produced": 26,
+      "firstOrderCompleted": 21600,
+      "lateOrders": 2
+    },
+    {
+      "key": "breakdown",
+      "shipped": 27,
+      "produced": 27,
+      "firstOrderCompleted": 18000,
+      "lateOrders": 2
+    },
+    {
+      "key": "operator",
+      "shipped": 28,
+      "produced": 28,
+      "firstOrderCompleted": 14400,
+      "lateOrders": 0
+    },
+    {
+      "key": "expedite",
+      "shipped": 28,
+      "produced": 28,
+      "firstOrderCompleted": 10800,
+      "lateOrders": 0
+    }
+  ],
+  "forecast": {
+    "samples": 50,
+    "assumptions": {
+      "cycleVariation": 0.1,
+      "deliveryJitter": 1800,
+      "failureProbability": 0.2,
+      "repairMinutes": 30,
+      "qualityFail": 0.12,
+      "reworkFail": 0.15
+    },
+    "repairMinutes": {
+      "mean": 38.4,
+      "p05": 30,
+      "p50": 30,
+      "p95": 60
+    },
+    "shipped": {
+      "mean": 28,
+      "p05": 28,
+      "p50": 28,
+      "p95": 28
+    },
+    "baselineShipped": {
+      "mean": 27.96,
+      "p05": 28,
+      "p50": 28,
+      "p95": 28
+    },
+    "benefit": {
+      "mean": -18000,
+      "p05": -30000,
+      "p50": -30000,
+      "p95": 70000
+    },
+    "paybackShifts": null,
+    "orders": [
+      {
+        "id": "A-101",
+        "probability": 0.42,
+        "interval": [
+          0.2937479723456693,
+          0.5576680331222217
+        ]
+      },
+      {
+        "id": "A-102",
+        "probability": 0,
+        "interval": [
+          0,
+          0.07135003417431873
+        ]
+      }
+    ],
+    "rows": [
+      {
+        "seed": 2026,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2027,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2028,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2029,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2030,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2031,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2032,
+        "shipped": 28,
+        "baselineShipped": 27,
+        "scrapped": 2,
+        "late": 1,
+        "benefit": 120000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2033,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2034,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2035,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2036,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2037,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2038,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2039,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2040,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2041,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": 70000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2042,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2043,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": 70000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2044,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2045,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2046,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2047,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2048,
+        "shipped": 28,
+        "baselineShipped": 27,
+        "scrapped": 3,
+        "late": 1,
+        "benefit": 120000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2049,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2050,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2051,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2052,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2053,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2054,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2055,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2056,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2057,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2058,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2059,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2060,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2061,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2062,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2063,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2064,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": 70000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2065,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2066,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2067,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2068,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2069,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2070,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2071,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 60
+      },
+      {
+        "seed": 2072,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2073,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2074,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 0,
+        "late": 0,
+        "benefit": -30000,
+        "repairMinutes": 30
+      },
+      {
+        "seed": 2075,
+        "shipped": 28,
+        "baselineShipped": 28,
+        "scrapped": 1,
+        "late": 1,
+        "benefit": -30000,
+        "repairMinutes": 30
+      }
+    ]
+  }
+}

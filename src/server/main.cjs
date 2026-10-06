@@ -205,6 +205,15 @@ const server = http.createServer(async (req, res) => {
         );
         return json(res, 200, { user: { id: s.user_id, ...a }, csrf: s.csrf });
       }
+      if (route === "/api/analytics" && method === "POST") {
+        rate(req, "analytics", 12);
+        const b = await body(req), analytics = require('./analytics.cjs');
+        if (b.kind === 'diagnose') return json(res, 200, await analytics.diagnose(v.configuration(b.config), simulate));
+        if (b.kind === 'forecast') return json(res, 200, await analytics.forecast(b, simulate));
+        if (b.kind === 'train') return json(res, 200, analytics.train(b));
+        if (b.kind === 'portfolio') return json(res, 200, await analytics.portfolio(b, simulate));
+        v.fail();
+      }
       if (route === "/api/templates" && method === "GET")
         return json(res, 200, {
           templates: ["base", "delay", "breakdown", "operator", "expedite"].map(
@@ -319,6 +328,7 @@ const server = http.createServer(async (req, res) => {
     const files = {
       "/": "index.html",
       "/app.js": "app.js",
+      "/lab.js": "lab.js",
       "/style.css": "style.css",
       "/i18n.js": "i18n.js",
     };

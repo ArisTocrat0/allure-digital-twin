@@ -4,6 +4,7 @@ window.I18N = {
     deliveryTime: "Время поставки (секунды)",
     noDeliveries:
       "Поставки не запланированы. Используется только начальный запас.",
+    analytics: "Аналитика и прогноз",
     app: "Цифровой двойник",
     demo: "Демонстрационные данные. Модель не калибрована на ALLUR и не является реальной телеметрией.",
     overview: "Обзор",
@@ -144,7 +145,7 @@ window.I18N = {
     how2: "2. Рассчитайте 8 часов или шаг 15 минут.",
     how3: "3. Сравните отгрузки и выполнение сроков.",
     noRisk:
-      "Вероятность опоздания не оценена. Monte Carlo и восстановление текущего снимка пока не реализованы.",
+      "Прогноз и оценка риска доступны в аналитике. Расчёт сценария начинается с нуля; восстановление текущего снимка не поддерживается.",
     logoutDone: "Вы вышли из аккаунта",
     busy: "Расчёт уже выполняется",
     invalid_credentials: "Неверная почта или пароль",
@@ -165,7 +166,7 @@ window.I18N = {
     internal_error: "Ошибка сервера. Проверьте локальный журнал.",
     cancel: "Отмена",
     skip: "Перейти к содержимому",
-    authTitle: "Вход в Production Lab",
+    authTitle: "Вход",
     elapsed: "Расчёт занял",
     ms: "мс",
     resultHelp: "Сохраняемый прогон использует конфигурацию на момент расчёта.",
@@ -174,6 +175,7 @@ window.I18N = {
   en: {
     deliveryTime: "Delivery time (seconds)",
     noDeliveries: "No deliveries scheduled. Only initial stock is available.",
+    analytics: "Analytics and forecast",
     app: "Digital twin",
     demo: "Demonstration data. Not calibrated to ALLUR and not live factory telemetry.",
     overview: "Overview",
@@ -314,7 +316,7 @@ window.I18N = {
     how2: "2. Calculate eight hours or advance 15 minutes.",
     how3: "3. Compare shipments and order deadlines.",
     noRisk:
-      "Late-delivery probability is not estimated. Monte Carlo and runtime snapshot restore are not implemented.",
+      "Forecasts and risk estimates are available in Analytics. Scenarios replay from zero; runtime snapshot restore is not supported.",
     logoutDone: "You have signed out",
     busy: "A calculation is already running",
     invalid_credentials: "Incorrect email or password",
@@ -335,7 +337,7 @@ window.I18N = {
     internal_error: "Server error. Check the local log.",
     cancel: "Cancel",
     skip: "Skip to content",
-    authTitle: "Sign in to Production Lab",
+    authTitle: "Sign in",
     elapsed: "Calculation took",
     ms: "ms",
     resultHelp:
@@ -345,6 +347,7 @@ window.I18N = {
   kk: {
     deliveryTime: "Жеткізілім уақыты (секунд)",
     noDeliveries: "Жеткізілім жоспарланбаған. Тек бастапқы қор қолданылады.",
+    analytics: "Талдау және болжам",
     app: "Цифрлық егіз",
     demo: "Көрсетілім деректері. Модель ALLUR деректерімен калибрленбеген және зауыттың нақты телеметриясы емес.",
     overview: "Шолу",
@@ -484,7 +487,7 @@ window.I18N = {
     how2: "2. 8 сағатты есептеңіз немесе 15 минут алға өтіңіз.",
     how3: "3. Жөнелтулер мен мерзімдерді салыстырыңыз.",
     noRisk:
-      "Кешігу ықтималдығы бағаланбайды. Monte Carlo және орындалу сәтінің күйін қалпына келтіру іске асырылмаған.",
+      "Болжам мен тәуекел бағасы талдауда қолжетімді. Сценарий нөлден есептеледі; ағымдағы күйді қалпына келтіру қолдау таппайды.",
     logoutDone: "Тіркелгіден шықтыңыз",
     busy: "Есептеу орындалып жатыр",
     invalid_credentials: "Пошта немесе құпиясөз дұрыс емес",
@@ -505,7 +508,7 @@ window.I18N = {
     internal_error: "Сервер қатесі. Жергілікті журналды тексеріңіз.",
     cancel: "Бас тарту",
     skip: "Мазмұнға өту",
-    authTitle: "Production Lab жүйесіне кіру",
+    authTitle: "Кіру",
     elapsed: "Есептеу уақыты",
     ms: "мс",
     resultHelp:

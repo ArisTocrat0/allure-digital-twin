@@ -1,0 +1,66 @@
+{
+  "seed": 2026,
+  "horizon": 28800,
+  "cycles": [
+    360,
+    600,
+    420
+  ],
+  "bufferCaps": [
+    2,
+    2
+  ],
+  "operators": 2,
+  "bom": {
+    "body": 1,
+    "engine": 1,
+    "wheels": 4
+  },
+  "stock": {
+    "body": 12,
+    "engine": 8,
+    "wheels": 48
+  },
+  "deliveries": [
+    {
+      "at": 7200,
+      "parts": {
+        "body": 20,
+        "engine": 24,
+        "wheels": 80
+      }
+    }
+  ],
+  "shifts": [
+    [
+      0,
+      12600
+    ],
+    [
+      14400,
+      28800
+    ]
+  ],
+  "failures": [
+    {
+      "at": 10200,
+      "station": 1,
+      "duration": 1800
+    }
+  ],
+  "qualityFail": 0.12,
+  "reworkFail": 0.15,
+  "shipEvery": 3600,
+  "orders": [
+    {
+      "id": "A-101",
+      "qty": 12,
+      "due": 14400
+    },
+    {
+      "id": "A-102",
+      "qty": 16,
+      "due": 28800
+    }
+  ]
+}

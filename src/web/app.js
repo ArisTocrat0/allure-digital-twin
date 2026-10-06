@@ -34,7 +34,7 @@ const t = (key) => I18N[lang][key] || I18N[lang].error,
       .map((x) => String(x).padStart(2, "0"))
       .join(":"),
   page = () =>
-    ["overview", "line", "scenarios", "resources", "profile"].includes(
+    ["overview", "line", "scenarios", "resources", "profile", "analytics"].includes(
       location.hash.slice(1),
     )
       ? location.hash.slice(1)
@@ -84,10 +84,10 @@ function language() {
   localStorage.setItem("allur-language", lang);
 }
 function authPage() {
-  return `<main id="content" class="auth" tabindex="-1"><section><div class="eyebrow">QOSTANAI AI INDUSTRY HACKATHON 2026</div><h1>${t("welcome")}</h1><p>${t("intro")}</p><p class="muted">${t("accountHelp")}</p><div class="demo">${t("demo")}</div><p class="muted">${t("local")}</p></section><section class="panel"><h2>${t(registering ? "register" : "authTitle")}</h2><form id="auth-form">${registering ? `<label class="field">${t("name")}<input name="name" id="auth-name" autocomplete="name" minlength="2" maxlength="60" required></label>` : ""}<label class="field">${t("email")}<input name="email" id="auth-email" type="email" autocomplete="username" maxlength="254" required></label><label class="field">${t("password")}<input name="password" id="auth-password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" minlength="${registering ? 12 : 1}" maxlength="128" required></label>${registering ? `<p class="muted">${t("passwordHelp")}</p>` : ""}<button class="primary" id="auth-submit">${t(registering ? "register" : "login")}</button></form><button class="switch" id="auth-switch">${t(registering ? "login" : "register")}</button></section></main>`;
+  return `<main id="content" class="auth" tabindex="-1"><section class="panel"><h2>${t(registering ? "register" : "authTitle")}</h2><form id="auth-form">${registering ? `<label class="field">${t("name")}<input name="name" id="auth-name" autocomplete="name" minlength="2" maxlength="60" required></label>` : ""}<label class="field">${t("email")}<input name="email" id="auth-email" type="email" autocomplete="username" maxlength="254" required></label><label class="field">${t("password")}<input name="password" id="auth-password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" minlength="${registering ? 12 : 1}" maxlength="128" required></label><button class="primary" id="auth-submit">${t(registering ? "register" : "login")}</button></form><button class="switch" id="auth-switch">${t(registering ? "login" : "register")}</button></section><p class="auth-disclaimer">${t("demo")}</p></main>`;
 }
 function nav() {
-  return `<nav aria-label="${t("app")}">${["overview", "line", "scenarios", "resources", "profile"].map((k) => `<a href="#${k}" ${page() === k ? 'aria-current="page"' : ""} class="${page() === k ? "active" : ""}">${t(k)}</a>`).join("")}<div class="account">${esc(me.name)}<br>${esc(me.email)}</div><button id="logout">${t("logout")}</button></nav>`;
+  return `<nav aria-label="${t("app")}">${["overview", "line", "scenarios", "resources", "analytics", "profile"].map((k) => `<a href="#${k}" ${page() === k ? 'aria-current="page"' : ""} class="${page() === k ? "active" : ""}">${t(k)}</a>`).join("")}<div class="account">${esc(me.name)}<br>${esc(me.email)}</div><button id="logout">${t("logout")}</button></nav>`;
 }
 function controls() {
   return `<div class="toolbar"><span class="clock">${t("time")}: ${clock(result?.t || 0)}</span><button data-calc="end" class="primary">${t("run")}</button><button data-calc="step">${t("step")}</button><button data-calc="reset">${t("reset")}</button><button data-calc="save">${t("saveRun")}</button></div><p class="muted">${scenarioName ? esc(scenarioName) : t(templateKey)} · ${t("elapsed")}: ${elapsed.toFixed(2)} ${t("ms")}</p>`;
@@ -120,7 +120,7 @@ function compare() {
   return `<section class="panel"><h2>${t("compare")}</h2><div class="table-wrap"><table id="comparison"><thead><tr>${["metric", "baseline", "selected", "delta"].map((k) => `<th>${t(k)}</th>`).join("")}</tr></thead><tbody>${rows.map(([k, b, a]) => `<tr><td>${t(k)}</td><td>${b}</td><td>${a}</td><td>${a - b > 0 ? "+" : ""}${a - b}</td></tr>`).join("")}</tbody></table></div></section>`;
 }
 function overview() {
-  return `<section class="hero"><div class="eyebrow">ALLUR / PRODUCTION LAB</div><h1>${t("welcome")}</h1><p>${t("intro")}</p></section>${controls()}${stats()}${compare()}<div class="grid"><section class="panel"><h2>${t("how")}</h2><p>${t("how1")}</p><p>${t("how2")}</p><p>${t("how3")}</p><a href="#line">${t("openLine")} →</a></section><section class="panel"><h2>${t("history")}</h2>${history.length ? history.map((r) => `<div class="list-item"><span>${esc(r.name || t("newScenario"))}<br><small>${new Date(r.created_at).toLocaleString(lang === "kk" ? "kk-KZ" : lang === "ru" ? "ru-RU" : "en-GB")}</small></span><button data-run="${r.id}">${t("view")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}<p class="muted">${t("resultHelp")}</p></section></div>`;
+  return `<section class="hero"><div class="eyebrow">ALLUR check in</div><h1>${t("welcome")}</h1><p>${t("intro")}</p></section>${controls()}${stats()}${compare()}<div class="grid"><section class="panel"><h2>${t("how")}</h2><p>${t("how1")}</p><p>${t("how2")}</p><p>${t("how3")}</p><a href="#line">${t("openLine")} →</a></section><section class="panel"><h2>${t("history")}</h2>${history.length ? history.map((r) => `<div class="list-item"><span>${esc(r.name || t("newScenario"))}<br><small>${new Date(r.created_at).toLocaleString(lang === "kk" ? "kk-KZ" : lang === "ru" ? "ru-RU" : "en-GB")}</small></span><button data-run="${r.id}">${t("view")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}<p class="muted">${t("resultHelp")}</p></section></div>`;
 }
 function line() {
   if (!result) return "";
@@ -200,8 +200,10 @@ function profile() {
 }
 function render() {
   language();
+  document.body.classList.toggle("auth-screen", !me);
   if (!me) {
     $("shell").innerHTML = authPage();
+    document.querySelectorAll("button").forEach(b => b.disabled = busy);
     $("auth-switch").onclick = () => {
       registering = !registering;
       render();
@@ -225,10 +227,17 @@ function render() {
     return;
   }
   $("shell").innerHTML =
-    `<div class="layout">${nav()}<main id="content" tabindex="-1"><div class="demo">${t("demo")}</div>${{ overview, line, scenarios, resources, profile }[page()]()}<p class="footnote">${t("noRisk")}</p><p class="footnote">${t("local")}</p></main></div>`;
+    `<div class="layout">${nav()}<main id="content" tabindex="-1"><div class="demo">${t("demo")}</div>${{ overview, line, scenarios, resources, profile, analytics:()=>Lab.render({config,lang,esc}) }[page()]()}<p class="footnote">${t("noRisk")}</p><p class="footnote">${t("local")}</p></main></div>`;
+  document.querySelectorAll("button").forEach(b => b.disabled = busy);
+  Lab.bind({config,lang,api,action,render,apply:async c=>{
+    const r=await api('/scenarios',{method:'POST',data:{name:scenarioName||t('newScenario'),config:c}});
+    config=r.config;scenarioId=r.id;scenarioName=r.name;saved=(await api('/scenarios')).scenarios;
+    await calculate(0);notify('saved');
+  }});
   $("logout").onclick = () =>
     action(async () => {
       await api("/auth/logout", { method: "POST" });
+      Lab.reset();
       me = null;
       csrf = "";
       result = null;

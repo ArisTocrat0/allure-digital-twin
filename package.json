@@ -9,9 +9,13 @@
     "pretest": "node scripts/build.cjs",
     "test": "node --test tests/*.test.js",
     "test:ui": "node tests/app-ui.cjs",
-    "benchmark": "node scripts/benchmark.cjs"
+    "benchmark": "node scripts/benchmark.cjs",
+    "test:analytics-ui": "node tests/lab-ui.cjs"
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
   }
 }

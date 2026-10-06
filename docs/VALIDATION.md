@@ -38,3 +38,14 @@ Windows Computer Use/node_repl is not available in this session. UI QA used cont
 The complete release suite passed 43 tests after the Unicode fix. Lone high and low UTF-16 surrogates in order IDs return HTTP 400 `invalid_config` for create/update/direct simulate. Rejected writes leave the saved scenario list unchanged. A valid paired emoji is created with HTTP 201 and then simulated by saved scenario ID with HTTP 200; the complete native result matches the JS reference. Unit coverage also includes malformed nested metadata/keys, valid Cyrillic/Kazakh text and a valid supplementary scalar pair.
 
 The check runs before persistence/native serialization. No C++ or UI code changed for P3, so the earlier native rebuild/UBSan and UI results above remain the P2 checkpoint evidence, not newly repeated P3 checks. The user database is preserved; existing invalid rows, if any, are not rewritten or deleted.
+
+## Проверка расширенного MVP — 2026-10-05
+
+- Полный набор: 50 тестов пройдено (43 прежних + 7 новых групп аналитики).
+- tests/app-ui.cjs: PASS; tests/lab-ui.cjs: PASS. Проверены импорт CSV с кавычками, редактирование обычными полями и JSON, сохранение, исходный план, диагностика, прогноз поломок/сроков, сохранение введённых затрат, обучение ML, портфель линий, три языка и мобильный экран.
+- Исправлена гонка интерфейса: после перерисовки кнопки сохраняют блокировку до окончания текущего действия; быстрый следующий запрос не теряется молча.
+- Новые backend-функции используют существующие сессию, CSRF, ограничения тела и валидацию конфигурации. Monte Carlo ограничен 200 прогонами, портфель — 6 линиями, обучение — 400 строками и 500 итерациями. Аналитика ограничена 12 запросами в минуту на IP.
+- ML: проверка независимости параметров обучения от изменений в поздней тестовой выборке, отказ при недостатке данных/одном классе/повторных временных отметках. Вероятность для текущего плана скрыта при отсутствии улучшения или экстраполяции.
+- PPTX: 8 слайдов; пройдены проверки пакета, геометрии, шрифтов, импорта и встроенных данных диаграммы. Все слайды отрендерены и просмотрены; файл не открывался в нативном PowerPoint. Отчёт проверки: artifacts/deck/validation-MVP.json.
+- Новая страница визуально проверена на 1440px и 390px. Данные пользовательской БД не заменялись; тесты использовали отдельные базы artifacts/.
+- Реальные данные ALLUR и подтверждённый производственный эффект отсутствуют. Текущие границы и соответствие кейсу — docs/criteria-audit.txt.
