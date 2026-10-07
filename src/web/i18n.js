@@ -523,3 +523,7 @@ Object.assign(window.I18N.kk,{caseData:"Кейс деректері",simulation:
 window.I18N.ru.line="Участки и оборудование";
 window.I18N.en.line="Sections and equipment";
 window.I18N.kk.line="Учаскелер мен жабдықтар";
+
+Object.assign(window.I18N.ru,{lightTheme:'Светлая тема',darkTheme:'Тёмная тема'});
+Object.assign(window.I18N.en,{lightTheme:'Light theme',darkTheme:'Dark theme'});
+Object.assign(window.I18N.kk,{lightTheme:'Ашық тақырып',darkTheme:'Қараңғы тақырып'});

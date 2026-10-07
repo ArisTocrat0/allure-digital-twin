@@ -3,21 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ALLUR check in</title>
+    <title>ALLUR demo version</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <a id="skip" class="skip" href="#content">Перейти к содержимому</a>
     <header>
-      <a class="brand" href="#overview" aria-label="ALLUR check in"><svg class="brand-logo" viewBox="0 0 1272 444" aria-hidden="true"><g fill="#ff3226"><path fill-rule="evenodd" d="M168 114a168 168 0 1 0 95 306v12h73V282a168 168 0 0 0-168-168Zm0 82a81 81 0 1 1 0 162 81 81 0 0 1 0-162Z"/><path d="M390 0h87v432h-87zM533 0h88v432h-88zM671 122h87v184q0 54 51 54t51-54V122h88v184q0 138-139 138T671 306ZM991 432V252q0-141 141-141t140 151l-87 5q0-72-53-72t-54 57v180Z"/></g></svg><span class="brand-name"><span>check in</span></span></a
-      ><label class="language"
-        ><span id="language-label">Язык</span
+      <a class="brand" href="#overview" aria-label="ALLUR demo version"><svg class="brand-logo" viewBox="0 0 1272 444" aria-hidden="true"><g fill="#ff3226"><path fill-rule="evenodd" d="M168 114a168 168 0 1 0 95 306v12h73V282a168 168 0 0 0-168-168Zm0 82a81 81 0 1 1 0 162 81 81 0 0 1 0-162Z"/><path d="M390 0h87v432h-87zM533 0h88v432h-88zM671 122h87v184q0 54 51 54t51-54V122h88v184q0 138-139 138T671 306ZM991 432V252q0-141 141-141t140 151l-87 5q0-72-53-72t-54 57v180Z"/></g></svg><span class="brand-name"><span>demo version</span></span></a
+      ><div class="header-actions"><label class="language language-icon"
+        ><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg><span id="language-label" class="visually-hidden">Язык</span
         ><select id="language" aria-labelledby="language-label">
           <option value="ru">Русский</option>
           <option value="kk">Қазақша</option>
           <option value="en">English</option>
         </select></label
-      >
+      ><button id="theme-toggle" class="header-icon" type="button" aria-label="Светлая тема" title="Светлая тема"><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg></button><a id="settings-link" class="header-icon" href="#settings" aria-label="Настройки" title="Настройки" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.6 2.4-2 .9-2.2-.7-2 3.4 1.6 1.7v2.6L3.2 15l2 3.4 2.2-.7 2 .9L10 21h4l.6-2.4 2-.9 2.2.7 2-3.4-1.6-1.7v-2.6L20.8 9l-2-3.4-2.2.7-2-.9L14 3Z"/><circle cx="12" cy="12" r="3"/></svg></a></div>
     </header>
     <div id="notice" role="status" aria-live="polite"></div>
     <div id="shell"></div>
@@ -26,6 +26,7 @@
     <script src="/decision.js"></script>
     <script src="/factory-domain.js"></script>
     <script src="/factory.js"></script>
+    <script src="/statistics.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

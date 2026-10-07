@@ -37,5 +37,5 @@ window.Factory=(()=>{
   if($('case-forecast'))$('case-forecast').onclick=()=>run(async()=>{const options={dataset,days:Number($('case-days').value),extraDowntime:[0,1,2].map(i=>Number($('case-stop-'+i).value)),speedup:[0,1,2].map(i=>Number($('case-speed-'+i).value)/100),cost:Object.fromEntries(['margin','downtimeHour','operating','investment'].map(k=>[k,Number($('case-cost-'+k).value)]))};prediction=await api('/factory/forecast',{method:'POST',data:options});prediction.input=options;});
   if($('case-report'))$('case-report').onclick=()=>download('allur-case-forecast.json',JSON.stringify(prediction,null,2));
  }
- return {render,bind,async load(api){dataset=(await api('/factory')).dataset;savedDataset=structuredClone(dataset);},reset(){dataset=null;savedDataset=null;prediction=null;from='';to='';status='';}};
+ return {getDataset(){return structuredClone(savedDataset);},render,bind,async load(api){dataset=(await api('/factory')).dataset;savedDataset=structuredClone(dataset);},reset(){dataset=null;savedDataset=null;prediction=null;from='';to='';status='';}};
 })();

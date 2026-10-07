@@ -205,6 +205,14 @@ const server = http.createServer(async (req, res) => {
         );
         return json(res, 200, { user: { id: s.user_id, ...a }, csrf: s.csrf });
       }
+      if(route==='/api/statistics/export'&&method==='POST'){
+        rate(req,'excel-export',30);
+        const b=await body(req);if(!v.languages.includes(b.language))v.fail();
+        const stats=require('./statistics.cjs');let args={language:b.language};
+        if(b.mode==='current'){const config=v.configuration(b.config);if(!Number.isInteger(b.until)||b.until<0||b.until>config.horizon)v.fail();const snapshot=(await simulate(config,b.until)).snapshot;args.simulation={snapshot,kpi:require('./decisions.cjs').measures(config,snapshot)};}
+        else if(b.mode==='days'){const factory=require('../domain/factory.cjs'),row=db.prepare('SELECT dataset FROM factory_datasets WHERE user_id=?').get(s.user_id);args.dataset=row?factory.validate(JSON.parse(row.dataset)):structuredClone(factory.DEFAULT);args.from=b.from||null;args.to=b.to||null;factory.overview(args.dataset,args.from,args.to);}else v.fail();
+        const bytes=await stats.workbook(args);res.writeHead(200,{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="ALLUR-statistics.xlsx"'});return res.end(bytes);
+      }
       if (route === '/api/factory' && method === 'GET') {
         const factory=require('../domain/factory.cjs'), row=db.prepare('SELECT dataset FROM factory_datasets WHERE user_id=?').get(s.user_id);
         const dataset=row?factory.validate(JSON.parse(row.dataset)):structuredClone(factory.DEFAULT);
@@ -350,6 +358,7 @@ const server = http.createServer(async (req, res) => {
       "/app.js": "app.js",
       "/lab.js": "lab.js",
       "/decision.js": "decision.js",
+      "/statistics.js": "statistics.js",
       "/factory.js": "factory.js",
       "/factory-domain.js": "../domain/factory.cjs",
       "/style.css": "style.css",

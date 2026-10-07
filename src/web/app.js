@@ -12,6 +12,8 @@ const $ = (id) => document.getElementById(id),
           "'": "&#39;",
         })[c],
     );
+document.documentElement.dataset.theme=localStorage.getItem('allur-theme')==='light'?'light':'dark';
+$('theme-toggle').onclick=()=>{const theme=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=theme;localStorage.setItem('allur-theme',theme);language();};
 let lang = localStorage.getItem("allur-language") || "ru";
 if (!I18N[lang]) lang = "ru";
 let me = null,
@@ -40,6 +42,7 @@ const t = (key) => I18N[lang][key] || I18N[lang].error,
       ? location.hash.slice(1)
       : "overview";
 function notify(key, error = false) {
+  if(key==="ready"&&!error){$("notice").textContent="";$("notice").className="";return;}
   $("notice").textContent = t(key);
   $("notice").className = error ? "error" : "";
 }
@@ -80,15 +83,25 @@ function language() {
   document.documentElement.lang = lang;
   $("language").value = lang;
   $("language-label").textContent = t("language");
+  $("language").title=t("language")+": "+$("language").selectedOptions[0].textContent;
   $("skip").textContent = t("skip");
   localStorage.setItem("allur-language", lang);
+  const theme=document.documentElement.dataset.theme||"dark";
+  const label=t(theme==="dark"?"lightTheme":"darkTheme");
+  $("theme-toggle").setAttribute("aria-label",label);
+  $("theme-toggle").title=label;
+  $("theme-toggle").setAttribute("aria-pressed",String(theme==="light"));
+  $("settings-link").hidden=!me;
+  $("settings-link").title=Decision.tr(lang,"settings");
+  $("settings-link").setAttribute("aria-label",Decision.tr(lang,"settings"));
+  if(["settings","profile","caseData","caseOverview","caseLine"].includes(page()))$("settings-link").setAttribute("aria-current","page");else $("settings-link").removeAttribute("aria-current");
 }
 function authPage() {
-  return `<main id="content" class="auth" tabindex="-1"><section class="panel"><h2>${t(registering ? "register" : "authTitle")}</h2><form id="auth-form">${registering ? `<label class="field">${t("name")}<input name="name" id="auth-name" autocomplete="name" minlength="2" maxlength="60" required></label>` : ""}<label class="field">${t("email")}<input name="email" id="auth-email" type="email" autocomplete="username" maxlength="254" required></label><label class="field">${t("password")}<input name="password" id="auth-password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" minlength="${registering ? 12 : 1}" maxlength="128" required></label><button class="primary" id="auth-submit">${t(registering ? "register" : "login")}</button></form><button class="switch" id="auth-switch">${t(registering ? "login" : "register")}</button></section><p class="auth-disclaimer">${t("demo")}</p></main>`;
+  return `<main id="content" class="auth" tabindex="-1"><section class="panel"><h2>${t(registering ? "register" : "authTitle")}</h2><form id="auth-form">${registering ? `<label class="field">${t("name")}<input name="name" id="auth-name" autocomplete="name" minlength="2" maxlength="60" required></label>` : ""}<label class="field">${t("email")}<input name="email" id="auth-email" type="email" autocomplete="username" maxlength="254" required></label><label class="field">${t("password")}<input name="password" id="auth-password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" minlength="${registering ? 12 : 1}" maxlength="128" required></label><button class="primary" id="auth-submit">${t(registering ? "register" : "login")}</button></form><button class="switch" id="auth-switch">${t(registering ? "login" : "register")}</button></section></main>`;
 }
 function nav() {
  const group={line:'production',simulation:'production',resources:'production',analytics:'risks',caseData:'settings',caseOverview:'settings',caseLine:'settings',profile:'settings'}[page()]||page();
- return '<nav aria-label="'+t('app')+'">'+['overview','production','scenarios','risks','settings'].map(k=>'<a href="#'+k+'" '+(group===k?'aria-current="page" class="active"':'')+'>'+ (k==='scenarios'?t(k):Decision.tr(lang,k==='overview'?'dashboard':k))+'</a>').join('')+'<div class="account">'+esc(me.name)+'<br>'+esc(me.email)+'</div><button id="logout">'+t('logout')+'</button></nav>';
+ return '<nav aria-label="'+t('app')+'">'+['production','scenarios','risks','overview'].map(k=>'<a href="#'+k+'" '+(group===k?'aria-current="page" class="active"':'')+'>'+ (k==='scenarios'?t(k):Decision.tr(lang,k==='overview'?'dashboard':k))+'</a>').join('')+'<div class="account">'+esc(me.name)+'<br>'+esc(me.email)+'</div></nav>';
 }
 function simplifyExpertUI(){
  const form=document.getElementById('scenario-form');if(form){const fields=[...form.querySelectorAll('.scenario-expert-field')];if(fields.length){const d=document.createElement('details');d.className='plan-group';d.innerHTML='<summary>'+Decision.tr(lang,'expert')+'</summary><div class="form-grid"></div>';fields.forEach(f=>d.lastElementChild.append(f));form.querySelector('.toolbar').before(d);}}
@@ -132,7 +145,7 @@ function compare() {
   return `<section class="panel"><h2>${t("compare")}</h2><div class="table-wrap"><table id="comparison"><thead><tr>${["metric", "baseline", "selected", "delta"].map((k) => `<th>${t(k)}</th>`).join("")}</tr></thead><tbody>${rows.map(([k, b, a]) => `<tr><td>${k==="downtime"?Decision.tr(lang,"downtime"):t(k)}</td><td>${b}</td><td>${a}</td><td class="${a===b?"":(["scrapped","downtime"].includes(k)?a<b:a>b)?"improvement":"deterioration"}">${a - b > 0 ? "+" : ""}${a - b}</td></tr>`).join("")}</tbody></table></div></section>`;
 }
 function overview() {
-  return `<section class="hero"><div class="eyebrow">ALLUR check in</div><h1>${t("welcome")}</h1><p>${t("intro")}</p></section>${controls()}${stats()}${compare()}<div class="grid"><section class="panel"><h2>${t("how")}</h2><p>${t("how1")}</p><p>${t("how2")}</p><p>${t("how3")}</p><a href="#line">${t("openLine")} →</a></section><section class="panel"><h2>${t("history")}</h2>${history.length ? history.map((r) => `<div class="list-item"><span>${esc(r.name || t("newScenario"))}<br><small>${new Date(r.created_at).toLocaleString(lang === "kk" ? "kk-KZ" : lang === "ru" ? "ru-RU" : "en-GB")}</small></span><button data-run="${r.id}">${t("view")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}<p class="muted">${t("resultHelp")}</p></section></div>`;
+  return `<section class="hero"><div class="eyebrow">ALLUR demo version</div><h1>${t("welcome")}</h1><p>${t("intro")}</p></section>${controls()}${stats()}${compare()}<div class="grid"><section class="panel"><h2>${t("how")}</h2><p>${t("how1")}</p><p>${t("how2")}</p><p>${t("how3")}</p><a href="#line">${t("openLine")} →</a></section><section class="panel"><h2>${t("history")}</h2>${history.length ? history.map((r) => `<div class="list-item"><span>${esc(r.name || t("newScenario"))}<br><small>${new Date(r.created_at).toLocaleString(lang === "kk" ? "kk-KZ" : lang === "ru" ? "ru-RU" : "en-GB")}</small></span><button data-run="${r.id}">${t("view")}</button></div>`).join("") : `<p class="muted">${t("none")}</p>`}<p class="muted">${t("resultHelp")}</p></section></div>`;
 }
 function line() {
   if (!result) return "";
@@ -161,7 +174,7 @@ function events() {
     .join("")}</div></section>`;
 }
 function scenarios() {
-  return `<h1>${t("scenarios")}</h1><p class="muted">${t("configHelp")}</p><section class="panel"><label class="field">${t("template")}<select id="template">${templates.map((x) => `<option value="${x.key}" ${x.key === templateKey ? "selected" : ""}>${t(x.key)}</option>`).join("")}</select></label></section><div class="grid"><section class="panel"><h2>${scenarioId ? esc(scenarioName) : t("newScenario")}</h2><form id="scenario-form"><div class="form-grid"><label class="field full">${t("scenarioName")}<input id="scenario-name" name="name" value="${esc(scenarioName || t(templateKey))}" minlength="2" maxlength="80" required></label>${[
+  return `<h1>${t("scenarios")}</h1><section class="panel"><label class="field">${t("template")}<select id="template">${templates.map((x) => `<option value="${x.key}" ${x.key === templateKey ? "selected" : ""}>${t(x.key)}</option>`).join("")}</select></label></section><div class="grid"><section class="panel"><h2>${scenarioId ? esc(scenarioName) : t("newScenario")}</h2><form id="scenario-form"><div class="form-grid"><label class="field full">${t("scenarioName")}<input id="scenario-name" name="name" value="${esc(scenarioName || t(templateKey))}" minlength="2" maxlength="80" required></label>${[
     ["seed", config.seed, 0, 4294967295],
     ["operators", config.operators, 1, 3],
     ...config.deliveries.map((d, i) => [
@@ -208,7 +221,7 @@ function profile() {
     )
     .join(
       "",
-    )}</select></label><label class="field">${t("currentPassword")}<input name="currentPassword" type="password" maxlength="128" autocomplete="current-password"></label><label class="field">${t("newPassword")}<input name="newPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password"></label><p class="muted">${t("profileHelp")}</p><button class="primary">${t("save")}</button></form></section>`;
+    )}</select></label><label class="field">${t("currentPassword")}<input name="currentPassword" type="password" maxlength="128" autocomplete="current-password"></label><label class="field">${t("newPassword")}<input name="newPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password"></label><button class="primary">${t("save")}</button></form><div class="account-actions"><button id="logout" type="button">${t("logout")}</button></div></section>`;
 }
 function render() {
   language();
@@ -239,22 +252,24 @@ function render() {
     return;
   }
   $("shell").innerHTML =
-    `<div class="layout">${nav()}<main id="content" tabindex="-1"><div class="demo">${t("demo")}</div>${{ overview:()=>Decision.render(decisionContext(),"overview")+controls().replace(/<p class="muted">.*?<\/p>/, ""), caseOverview:()=>Factory.render({lang,esc,page:"overview"}), caseLine:()=>Factory.render({lang,esc,page:"line"}), production:productionPage, risks:riskPage, settings:settingsPage, line:productionPage, caseData:()=>Factory.render({lang,esc,page:page()}), simulation:()=>overview()+line().replace(controls(), "").replace(`<h1>${t("line")}</h1>`, ""), scenarios:()=>scenarios()+Lab.plan({config,lang,esc}), resources, profile, analytics:()=>Lab.render({config,lang,esc}) }[page()]()}<p class="footnote">${t("noRisk")}</p><p class="footnote">${t("local")}</p></main></div>`;
+    `<div class="layout">${nav()}<main id="content" tabindex="-1">${{ overview:()=>Statistics.render(decisionContext())+(Statistics.isCurrent()?controls().replace(/<p class="muted">.*?<\/p>/, ""):""), caseOverview:()=>Factory.render({lang,esc,page:"overview"}), caseLine:()=>Factory.render({lang,esc,page:"line"}), production:productionPage, risks:riskPage, settings:settingsPage, line:productionPage, caseData:()=>Factory.render({lang,esc,page:page()}), simulation:()=>overview()+line().replace(controls(), "").replace(`<h1>${t("line")}</h1>`, ""), scenarios:()=>scenarios()+Lab.plan({config,lang,esc}), resources, profile, analytics:()=>Lab.render({config,lang,esc}) }[page()]()}</main></div>`;
   simplifyExpertUI();
   Factory.bind({lang,api,action,render});
   Decision.bind({config,lang,api,action,render});
+  Statistics.bind({config,lang,csrf,action,render});
   document.querySelectorAll("button").forEach(b => b.disabled = busy);
   Lab.bind({config,lang,api,action,render,apply:async c=>{
     const r=await api('/scenarios',{method:'POST',data:{name:scenarioName||t('newScenario'),config:c}});
     config=r.config;scenarioId=r.id;scenarioName=r.name;saved=(await api('/scenarios')).scenarios;
     await calculate(0);notify('saved');
   }});
-  $("logout").onclick = () =>
+  if($("logout")) $("logout").onclick = () =>
     action(async () => {
       await api("/auth/logout", { method: "POST" });
       Lab.reset();
       Factory.reset();
       Decision.reset();
+      Statistics.reset();
       me = null;
       csrf = "";
       result = null;

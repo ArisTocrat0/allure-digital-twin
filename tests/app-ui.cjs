@@ -235,6 +235,7 @@ async function go(page, section) {
     assert.ok(
       await page.evaluate(() => document.activeElement.tagName !== "BODY"),
     );
+    await page.locator("#settings-link").click();
     await page.locator("#logout").click();
     await page.locator("#auth-form").waitFor();
     await page.locator("#auth-email").fill("ui@example.test");
