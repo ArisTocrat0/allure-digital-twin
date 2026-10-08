@@ -807,3 +807,5 @@ details.panel[open] > summary { margin-bottom:20px; }
 [data-theme="light"] body { background:#f4f3ef; }
 [data-theme="light"] .layout nav,[data-theme="light"] header { background:#faf9f6; }
 [data-theme="light"] .panel,[data-theme="light"] .stat,[data-theme="light"] .station,[data-theme="light"] .decision-station,[data-theme="light"] .risk-card,[data-theme="light"] .factory-flow .station { background:#fffefa; box-shadow:0 4px 18px #35301f0c,0 1px 3px #35301f08; }
+
+.demo-stat-note{color:#e9ba37;margin:0 0 20px;font-size:14px}.demo-output-chart{display:flex;justify-content:space-around;gap:16px;align-items:flex-end;padding:12px 0}.demo-output-day{flex:1;max-width:100px;display:flex;align-items:center;flex-direction:column;gap:10px}.demo-output-bar{width:100%;background:linear-gradient(180deg,#ffcc37,#dca419);border-radius:5px 5px 0 0}.demo-output-day strong{color:#e9ba37;font-size:20px}.demo-output-day span{font-size:13px}@media(max-width:600px){.demo-output-chart{gap:8px}.demo-output-day strong{font-size:16px}}
